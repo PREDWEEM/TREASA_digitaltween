@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "method": "monotone_logit_v1",
+  "profile_id": "tres arroyos-2026-09-16-v1-e4c72dd491",
+  "site": "Tres Arroyos",
+  "status": "experimental_una_campana",
+  "training_year": 2026,
+  "training_through": "2026-09-16",
+  "available_from": "2026-09-16",
+  "season_complete": false,
+  "first_interval_excluded": true,
+  "parameters": {
+    "offset": 0.7000000000000002,
+    "slope": 1.6
+  },
+  "fit": {
+    "n_observations": 17,
+    "n_intervals": 16,
+    "observed_window_total_plm2": 12089.666666666666,
+    "rmse_base_plm2": 1082.7876164147585,
+    "rmse_calibrated_plm2": 383.20033452905795,
+    "weighted_mse_base": 1.4141479938356043,
+    "weighted_mse_calibrated": 0.17711692369197757,
+    "regularization": 0.05,
+    "nuisance_scale_base": 12089.666666666673,
+    "nuisance_scale_calibrated": 12089.666666666666,
+    "parameter_at_bound": true
+  },
+  "observations_start": "2026-02-05",
+  "initial_zero_reference": true,
+  "model_fingerprint": "df297cdc5df473c98e059489c46c7331db522d87c047029eb0dc1ef93c557e54",
+  "model_parameters": {
+    "cobertura_pct": 20.0,
+    "w_max": 18.81,
+    "umbral_termoinhibicion": 24.0,
+    "umbral_choque_hidrico": 45.0,
+    "exponente_kr": 0.0,
+    "latitud": -38.45,
+    "longitud": -60.2763,
+    "latencia_jd": 25,
+    "techo_choque": 0.75,
+    "calentamiento_suelo": 0.0,
+    "umbral_primer_pico": 0.2,
+    "t_base": 2.0,
+    "t_opt": 20.0,
+    "t_crit": 30.0,
+    "tt_control": 600.0,
+    "tt_limite": 800.0,
+    "decay_enabled": true,
+    "decay_tau_days": 60.0,
+    "decay_beta": 1.0,
+    "decay_intensity": 0.75,
+    "decay_cap_fraction": 0.5
+  },
+  "seasonal_reference": {
+    "include_patterns": [
+      "tresas"
+    ],
+    "excluded_years": [
+      "2010",
+      "2015"
+    ],
+    "scope": "Referencia local Tres Arroyos 2025; una campaña",
+    "n_campaigns": 1,
+    "campaigns": "test -emerel tresas 2025.xlsx"
+  },
+  "source": {
+    "uploaded_filename": "VALIDA (1) (4)(2).xlsx",
+    "uploaded_sha256": "021eb652657495cdf873ed6e120bd69565c497c0bde603bb3769205b91e87fca",
+    "original_file": "tres_arroyos_2026_original.xlsx",
+    "sheet": "Hoja1",
+    "site_assigned_by_user": "Tres Arroyos",
+    "units": "plantas/m² por intervalo entre conteos",
+    "initial_zero_reference": "2026-02-05",
+    "weather_repository": "https://github.com/PREDWEEM/loliumTA_2026",
+    "weather_commit": "5b52fef47ed2c97aefe45b8939e751141db5216e",
+    "weather_source_path": "meteo_daily.csv",
+    "weather_source_sha256": "883f5a89351481b5a8cb4b60421464690d6562938ce756802a0fee2ec26ebc8b",
+    "weather_start": "2026-01-01",
+    "weather_end": "2026-09-16",
+    "weather_rows": 259,
+    "weather_nature": "Observaciones SIGA–INTA Barrow y puente provisional ECMWF IFS histórico",
+    "weather_station": "NH0216 / INTA Barrow",
+    "weather_coordinates": {
+      "latitude": -38.388,
+      "longitude": -60.346
+    },
+    "model_coordinates": {
+      "latitude": -38.45,
+      "longitude": -60.2763
+    },
+    "validation_cutoffs": [
+      "2026-03-27",
+      "2026-04-10",
+      "2026-04-23",
+      "2026-05-11",
+      "2026-05-28",
+      "2026-06-12",
+      "2026-06-26",
+      "2026-07-08",
+      "2026-08-03",
+      "2026-09-01"
+    ],
+    "observations_file": "tres_arroyos_2026_counts.csv",
+    "observations_sha256": "9f0d85dda74dabc48bdc2e4f4390b7c6a537dfd22e8ef7a3a27fab1540fd45b6",
+    "weather_file": "tres_arroyos_2026_weather.csv",
+    "weather_sha256": "3d9b8d4e9cb470809b453244e0bc1849f2000e2d53aef2a0bc6cccfa49bc3df0",
+    "weather_types": {
+      "Observado": 258,
+      "Provisional": 1
+    },
+    "observed_total_plm2": 12089.666666666668,
+    "replicate_count": null,
+    "replicate_conversion_factor": null
+  },
+  "validation": {
+    "kind": "hindcast_condicional_con_meteorologia_realizada",
+    "independent_season": false,
+    "n_intervals": 10,
+    "note": "Ajuste con datos hasta cada corte y evaluación del siguiente intervalo. Se utiliza meteorología SIGA observada y ECMWF provisional, no la emisión de pronóstico disponible en cada corte. No demuestra transferencia a otra campaña ni precisión operativa a siete días.",
+    "rmse_base_plm2": 716.334683713056,
+    "rmse_calibrated_plm2": 683.2707692772303,
+    "intervals_improved": 4
+  },
+  "limitations": [
+    "Una sola campaña incompleta. No se estima ni transfiere un total estacional.",
+    "El registro inicial de cero del 2026-02-05 delimita el primer intervalo; no se infiere ausencia de emergencia en fechas anteriores.",
+    "Cobertura de 20 % y Wmax de 18.81 mm son supuestos de la configuración operativa; el archivo no informa manejo ni cobertura.",
+    "El archivo FECHA + PLM2 no incluye repeticiones. Se utiliza un piso de ponderación común, no un error de muestreo medido.",
+    "Se conserva el techo del 50 % y decaimiento desde el 15/04 del motor Tres Arroyos. No se incorpora extinción post-pico de otra localidad.",
+    "La referencia estacional local sólo incluye una campaña (2025); sus percentiles no describen robustamente la variabilidad entre años.",
+    "La meteorología del ajuste incluye un dato ECMWF provisional el 16/09/2026; los demás días son observaciones SIGA–INTA Barrow.",
+    "La transformación no crea cohortes en fechas bloqueadas por el motor biofísico.",
+    "Un parámetro en su límite indica que persisten diferencias estructurales.",
+    "El ajuste no reduce automáticamente la incertidumbre de asimilación.",
+    "Los gráficos de la campaña de ajuste son retrospectivos, no predicciones independientes."
+  ]
+}

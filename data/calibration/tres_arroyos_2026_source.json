@@ -1,0 +1,38 @@
+{
+  "uploaded_filename": "VALIDA (1) (4)(2).xlsx",
+  "uploaded_sha256": "021eb652657495cdf873ed6e120bd69565c497c0bde603bb3769205b91e87fca",
+  "original_file": "tres_arroyos_2026_original.xlsx",
+  "sheet": "Hoja1",
+  "site_assigned_by_user": "Tres Arroyos",
+  "units": "plantas/m² por intervalo entre conteos",
+  "initial_zero_reference": "2026-02-05",
+  "weather_repository": "https://github.com/PREDWEEM/loliumTA_2026",
+  "weather_commit": "5b52fef47ed2c97aefe45b8939e751141db5216e",
+  "weather_source_path": "meteo_daily.csv",
+  "weather_source_sha256": "883f5a89351481b5a8cb4b60421464690d6562938ce756802a0fee2ec26ebc8b",
+  "weather_start": "2026-01-01",
+  "weather_end": "2026-09-16",
+  "weather_rows": 259,
+  "weather_nature": "Observaciones SIGA–INTA Barrow y puente provisional ECMWF IFS histórico",
+  "weather_station": "NH0216 / INTA Barrow",
+  "weather_coordinates": {
+    "latitude": -38.388,
+    "longitude": -60.346
+  },
+  "model_coordinates": {
+    "latitude": -38.45,
+    "longitude": -60.2763
+  },
+  "validation_cutoffs": [
+    "2026-03-27",
+    "2026-04-10",
+    "2026-04-23",
+    "2026-05-11",
+    "2026-05-28",
+    "2026-06-12",
+    "2026-06-26",
+    "2026-07-08",
+    "2026-08-03",
+    "2026-09-01"
+  ]
+}
