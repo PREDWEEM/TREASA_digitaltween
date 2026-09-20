@@ -58,11 +58,19 @@ del motor original. La fuente meteorológica operativa corresponde a INTA
 Barrow, −38,388, −60,346. Ambas ubicaciones se documentan por separado.
 
 Para series parciales se utiliza la referencia local `test -emerel tresas
-2025.xlsx` del clasificador original. Se mantiene la exclusión de 2010 y 2015.
+2025.xlsx` del clasificador original. Se mantienen las exclusiones de 2010 y
+2015 y se excluyen explícitamente Balcarce y San Pedro. La selección sigue
+conteniendo sólo Tres Arroyos 2025: ya utilizaba esta referencia local.
 Al disponer de una sola campaña, sus percentiles no representan robustamente
 la variabilidad entre años. El total observado parcial no se supone igual al
 potencial estacional completo; con conteos cargados se estima el potencial
 a partir de sus intervalos o se utiliza un valor previo aportado por el usuario.
+
+La referencia se recarga en cada ejecución para evitar tablas de versiones
+anteriores conservadas por Streamlit. La pestaña Trazabilidad muestra las
+curvas utilizadas y excluidas. Aplicación, escenarios y calibración utilizan
+la misma selección. Se regeneró el perfil 2026 con su nueva huella; los
+parámetros y resultados numéricos del ajuste y evaluación permanecen iguales.
 
 Consulte [MODEL_PROVENANCE.md](MODEL_PROVENANCE.md) para la revisión de origen,
 los hashes y la correspondencia científica.

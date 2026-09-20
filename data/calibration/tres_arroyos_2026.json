@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "method": "monotone_logit_v1",
-  "profile_id": "tres arroyos-2026-09-16-v1-e4c72dd491",
+  "profile_id": "tres arroyos-2026-09-16-v1-57b1c538b3",
   "site": "Tres Arroyos",
   "status": "experimental_una_campana",
   "training_year": 2026,
@@ -28,7 +28,7 @@
   },
   "observations_start": "2026-02-05",
   "initial_zero_reference": true,
-  "model_fingerprint": "df297cdc5df473c98e059489c46c7331db522d87c047029eb0dc1ef93c557e54",
+  "model_fingerprint": "8230370ea64f0805735f5183b99dcb2b49557c52e9c28e7d1b4434842aef8285",
   "model_parameters": {
     "cobertura_pct": 20.0,
     "w_max": 18.81,
@@ -60,6 +60,11 @@
       "2010",
       "2015"
     ],
+    "excluded_sites": [
+      "balcarce",
+      "san pedro"
+    ],
+    "excluded_campaigns": "2012.xlsx, 2009.xlsx, 2013.xlsx, 2024.xlsx, 2015.xlsx, 2023.xlsx, 2010.xlsx, 2014.xlsx, 2008.xlsx, 2011.xlsx, emererel2025 balcarce.xlsx, emrel sp 2025 san pedro.xlsx",
     "scope": "Referencia local Tres Arroyos 2025; una campaña",
     "n_campaigns": 1,
     "campaigns": "test -emerel tresas 2025.xlsx"

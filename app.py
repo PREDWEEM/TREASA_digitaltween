@@ -69,8 +69,8 @@ def load_model():
     return PracticalANNModel.from_directory(BASE / "models")
 
 
-@st.cache_data(show_spinner=False)
 def load_progress_reference():
+    """Recarga la referencia vigente; evita curvas o columnas obsoletas en caché."""
     return load_seasonal_reference(
         BASE / "models" / "modelo_clusters_k3.pkl",
         excluded_years=("2010", "2015"),
@@ -405,7 +405,8 @@ if source_option == "SIGA Barrow + ECMWF operativa":
 st.caption(
     f"Referencia estacional local: {reference_campaigns} campaña de Tres Arroyos "
     "(2025). Los percentiles son preliminares por disponer de una sola campaña; "
-    "la calibración local utiliza los conteos 2026."
+    "la calibración local utiliza los conteos 2026. "
+    "Balcarce y San Pedro están excluidos explícitamente."
 )
 if not forecast_metadata["complete"]:
     st.warning(
@@ -970,6 +971,8 @@ with tab_scenarios:
 
 with tab_audit:
     st.subheader("Trazabilidad científica")
+    st.write("Campañas utilizadas: " + seasonal_reference["Campanas"].iloc[0])
+    st.caption("Campañas excluidas: " + seasonal_reference["Campanas_Excluidas"].iloc[0])
     st.write(calibration_audit["reason"])
     if calibration_audit["profile_id"]:
         st.caption(f'Perfil: {calibration_audit["profile_id"]}')
@@ -1002,7 +1005,7 @@ with tab_audit:
                     f"beta={parameters.decay_beta:.5f}; "
                     f"intensidad={parameters.decay_intensity:.2f}"
                 ),
-                f"Tres Arroyos 2025; n={reference_campaigns} campaña; excluye 2010 y 2015",
+                f"Tres Arroyos 2025; n={reference_campaigns} campaña; excluye 2010, 2015, Balcarce y San Pedro",
             ],
         }
     )

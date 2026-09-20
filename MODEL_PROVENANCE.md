@@ -46,9 +46,17 @@ modifica el reloj térmico ni los pesos.
 ## Referencia estacional
 
 Se selecciona `test -emerel tresas 2025.xlsx` del clasificador original mediante
-el filtro `tresas`, manteniendo la exclusión de 2010 y 2015. Es una referencia
+el filtro `tresas`, manteniendo la exclusión de 2010 y 2015 y excluyendo
+explícitamente Balcarce y San Pedro antes de calcular los percentiles. Es una referencia
 local de una campaña; sus percentiles no cuantifican robustamente variación
 entre años. El archivo binario del clasificador no se modifica.
+
+El perfil 2026 registra los filtros y nombres incluidos/excluidos y se regenera
+para actualizar su huella. Como la selección ya era exclusivamente local,
+esta revisión conserva exactamente los parámetros, ajuste y evaluación temporal.
+La referencia se lee en cada ejecución de la interfaz, evitando resultados
+obsoletos de la caché de Streamlit. Se conservan el anclaje estacional, la ANN,
+el motor fisiológico y los datos de campo y meteorología originales.
 
 ## Meteorología y calibración
 
