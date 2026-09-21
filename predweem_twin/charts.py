@@ -58,12 +58,12 @@ def trajectory_chart(
 ):
     cutoff = pd.Timestamp(as_of).normalize()
     year_start = pd.Timestamp(cutoff.year, 1, 1)
-    year_end = pd.Timestamp(cutoff.year, 12, 31)
+    display_end = pd.Timestamp(cutoff.year, 10, 1)
     # La referencia anual sólo se dibuja: no extiende la meteorología ni
     # modifica el estado, las métricas, los hitos o los datos exportados.
     df = df.loc[
         (pd.to_datetime(df["Fecha"]) >= year_start)
-        & (pd.to_datetime(df["Fecha"]) <= min(cutoff + pd.Timedelta(days=7), year_end))
+        & (pd.to_datetime(df["Fecha"]) <= min(cutoff + pd.Timedelta(days=7), display_end))
     ].copy()
     if observations is not None and not observations.empty:
         observation_dates = pd.to_datetime(observations["Fecha"])
@@ -77,6 +77,7 @@ def trajectory_chart(
     historical = None
     if seasonal_reference is not None:
         historical = annual_historical_reference(seasonal_reference, cutoff)
+        historical = historical.loc[historical["Fecha"] <= display_end]
         figure.add_trace(
             go.Bar(
                 x=historical["Fecha"], y=historical["Flujo_Diario"] * 100,
@@ -238,19 +239,19 @@ def trajectory_chart(
                     annotation_position="bottom right",
                     annotation_font_color="#77877b",
                 )
-            if support_end < year_end:
+            if support_end < display_end:
                 figure.add_vrect(
-                    x0=support_end + pd.Timedelta(days=1), x1=year_end,
+                    x0=support_end + pd.Timedelta(days=1), x1=display_end,
                     fillcolor="rgba(150,158,167,.08)", line_width=0,
                     layer="below", annotation_text="Sin referencia disponible",
                     annotation_position="top right",
                     annotation_font_color="#7c8580",
                 )
-    months = pd.date_range(year_start, year_end, freq="MS")
+    months = pd.date_range(year_start, display_end, freq="MS")
     figure.update_xaxes(
-        range=[year_start, year_end], title_text=f"Calendario {cutoff.year}",
+        range=[year_start, display_end], title_text=f"Calendario {cutoff.year}",
         tickmode="array", tickvals=months,
-        ticktext=["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+        ticktext=["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "01 Oct"],
     )
     figure.update_yaxes(title_text="Flujo diario (%)", rangemode="tozero", secondary_y=False)
     figure.update_yaxes(

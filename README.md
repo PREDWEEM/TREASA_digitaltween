@@ -123,11 +123,17 @@ Aplicación, escenarios y calibración utilizan el mismo criterio de fecha.
 
 ### Contexto histórico anual en el gráfico principal
 
-El eje temporal muestra enero–diciembre del año consultado. El **flujo diario**
+El eje temporal muestra del **1 de enero al 1 de octubre** del año consultado.
+El recorte es visual y no vuelve a normalizar las series por el período visible.
+El **flujo diario**
 permanece en el eje izquierdo y la **emergencia acumulada** en el derecho.
 El fondo tenue muestra las campañas locales disponibles y el resumen del pool,
 junto con el flujo diario derivado de ese resumen. Es una referencia
 **orientativa**, no una predicción meteorológica ni una serie de conteos diarios.
+Ambos flujos comparten el eje izquierdo y se expresan como incremento diario del
+acumulado multiplicado por 100. El histórico se refiere al total de sus ventanas
+registradas; el gemelo, al total estacional estimado. No se dividen por el máximo
+diario de cada serie: un valor de 2 equivale a un avance de 2 puntos porcentuales.
 La curva individual 2026 se limita a su ventana registrada; el resumen conserva
 los supuestos de normalización descritos arriba.
 

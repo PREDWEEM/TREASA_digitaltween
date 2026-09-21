@@ -57,7 +57,7 @@ def test_chart_shows_annual_context_without_extending_weather_or_changing_state(
     })
     fig = trajectory_chart(frame, observations, "2027-05-05", seasonal_reference=reference)
     pd.testing.assert_frame_equal(frame, before)
-    assert pd.Timestamp(fig.layout.xaxis.range[1]) == pd.Timestamp("2027-12-31")
+    assert pd.Timestamp(fig.layout.xaxis.range[1]) == pd.Timestamp("2027-10-01")
     traces = {trace.name: trace for trace in fig.data}
     history = traces["Pool histórico · orientativo"]
     assert pd.to_datetime(history.x)[np.isfinite(history.y)].max() > pd.Timestamp("2027-05-12")
@@ -66,9 +66,10 @@ def test_chart_shows_annual_context_without_extending_weather_or_changing_state(
     assert pd.to_datetime(traces["Conteo de campo"].x).max() == pd.Timestamp("2027-05-03")
     for trace in fig.data:
         assert trace.yaxis == ("y" if trace.type == "bar" else "y2")
+        assert pd.to_datetime(trace.x).max() <= pd.Timestamp("2027-10-01")
         if "histórico" not in trace.name.casefold():
             assert pd.to_datetime(trace.x).max() <= pd.Timestamp("2027-05-12")
-    assert "Sin referencia disponible" in [item.text for item in fig.layout.annotations]
+    assert "Sin referencia disponible" not in [item.text for item in fig.layout.annotations]
 
 
 def test_historical_backdrop_does_not_leak_2026_into_earlier_cutoffs():
