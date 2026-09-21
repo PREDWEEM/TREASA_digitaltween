@@ -23,7 +23,7 @@ from predweem_twin.coverage import (
 from predweem_twin.core import ModelParameters, PracticalANNModel, run_predweem
 from predweem_twin.observations import prepare_observations, read_observation_file
 from predweem_twin.scenarios import apply_scenario
-from predweem_twin.seasonal import load_seasonal_reference
+from predweem_twin.seasonal import load_local_seasonal_reference
 from predweem_twin.state import (
     build_twin_snapshot,
     milestone_dates,
@@ -69,13 +69,9 @@ def load_model():
     return PracticalANNModel.from_directory(BASE / "models")
 
 
-def load_progress_reference():
+def load_progress_reference(as_of=None):
     """Recarga la referencia vigente; evita curvas o columnas obsoletas en caché."""
-    return load_seasonal_reference(
-        BASE / "models" / "modelo_clusters_k3.pkl",
-        excluded_years=("2010", "2015"),
-        include_patterns=("tresas",),
-    )
+    return load_local_seasonal_reference(BASE, as_of=as_of)
 
 
 def load_store():
@@ -314,8 +310,10 @@ parameters = ModelParameters(
     longitud=float(longitude),
 )
 model = load_model()
-seasonal_reference = load_progress_reference()
+seasonal_reference = load_progress_reference(as_of)
 reference_campaigns = int(seasonal_reference["N_Campanas"].iloc[0])
+reference_years = seasonal_reference["Campanas_Anos"].iloc[0]
+reference_2026_from = pd.Timestamp(seasonal_reference["Referencia_2026_Desde"].iloc[0])
 store = load_store()
 coverage_observations = store.coverage_observations(site_id)
 active_coverage = coverage_observations[
@@ -403,11 +401,28 @@ if source_option == "SIGA Barrow + ECMWF operativa":
         "de las observaciones y se reemplazan cuando SIGA publica el dato."
     )
 st.caption(
-    f"Referencia estacional local: {reference_campaigns} campaña de Tres Arroyos "
-    "(2025). Los percentiles son preliminares por disponer de una sola campaña; "
-    "la calibración local utiliza los conteos 2026. "
+    f"Referencia estacional local: Tres Arroyos {reference_years} "
+    f"({reference_campaigns} campaña{'s' if reference_campaigns > 1 else ''}). "
+    "Las campañas aportan el mismo peso. Los percentiles son descriptivos y "
+    "preliminares con tan pocos años; no son intervalos de confianza. "
     "Balcarce y San Pedro están excluidos explícitamente."
 )
+if reference_campaigns > 1:
+    st.caption(
+        f"La referencia 2026 usa el total registrado del 05/02 al {reference_2026_from:%d/%m/%Y}. "
+        "Se interpola el acumulado entre visitas. No se conocen nacimientos anteriores "
+        "al inicio y el final del archivo no certifica el fin de la emergencia."
+    )
+    if pd.Timestamp(as_of).year == 2026:
+        st.caption(
+            "La referencia 2026 incorpora información conocida al cierre de ese período. "
+            "La revisión de esta campaña es retrospectiva, no una validación predictiva independiente."
+        )
+else:
+    st.caption(
+        f"La referencia 2026 se habilita desde el {reference_2026_from:%d/%m/%Y}. "
+        "Para este corte se utiliza únicamente 2025."
+    )
 if not forecast_metadata["complete"]:
     st.warning(
         "El horizonte meteorológico está incompleto. Los indicadores futuros "
@@ -973,6 +988,20 @@ with tab_audit:
     st.subheader("Trazabilidad científica")
     st.write("Campañas utilizadas: " + seasonal_reference["Campanas"].iloc[0])
     st.caption("Campañas excluidas: " + seasonal_reference["Campanas_Excluidas"].iloc[0])
+    with st.expander("Curvas de la referencia local"):
+        st.dataframe(seasonal_reference, hide_index=True, width="stretch")
+        st.caption(
+            "Progreso entre 0 y 1. Antes del primer conteo de 2026, la mediana usa "
+            "sólo 2025. Al incorporar otra curva se conserva el avance previo "
+            "para evitar un retroceso del acumulado; los cuantiles originales "
+            "se muestran como Empirico. Después del último conteo, 2026 mantiene "
+            "el total de su ventana como supuesto de referencia; no son nuevas observaciones."
+        )
+        st.download_button(
+            "Descargar referencia local utilizada (CSV)",
+            seasonal_reference.to_csv(index=False).encode("utf-8"),
+            "tres_arroyos_referencia_local.csv", "text/csv",
+        )
     st.write(calibration_audit["reason"])
     if calibration_audit["profile_id"]:
         st.caption(f'Perfil: {calibration_audit["profile_id"]}')
@@ -1005,7 +1034,7 @@ with tab_audit:
                     f"beta={parameters.decay_beta:.5f}; "
                     f"intensidad={parameters.decay_intensity:.2f}"
                 ),
-                f"Tres Arroyos 2025; n={reference_campaigns} campaña; excluye 2010, 2015, Balcarce y San Pedro",
+                f"Tres Arroyos {reference_years}; n={reference_campaigns}; excluye 2010, 2015, Balcarce y San Pedro",
             ],
         }
     )

@@ -82,20 +82,48 @@ Las coordenadas del modelo son −38,4500, −60,2763; ET0 conserva la latitud
 del motor original. La fuente meteorológica operativa corresponde a INTA
 Barrow, −38,388, −60,346. Ambas ubicaciones se documentan por separado.
 
-Para series parciales se utiliza la referencia local `test -emerel tresas
-2025.xlsx` del clasificador original. Se mantienen las exclusiones de 2010 y
-2015 y se excluyen explícitamente Balcarce y San Pedro. La selección sigue
-conteniendo sólo Tres Arroyos 2025: ya utilizaba esta referencia local.
-Al disponer de una sola campaña, sus percentiles no representan robustamente
-la variabilidad entre años. El total observado parcial no se supone igual al
-potencial estacional completo; con conteos cargados se estima el potencial
-a partir de sus intervalos o se utiliza un valor previo aportado por el usuario.
+Para series parciales se utiliza una referencia exclusivamente local de
+**Tres Arroyos 2025 y 2026**, construida con:
+
+- `test -emerel tresas 2025.xlsx`, curva procesada del clasificador original.
+- `data/calibration/tres_arroyos_2026_counts.csv`, los 17 registros del
+  05/02 al 16/09/2026. Se suma el flujo por intervalos, se divide por el total
+  registrado de 12.089,67 plantas/m² y se interpola **el acumulado** entre visitas.
+  Así se conservan los acumulados observados y la masa de cada intervalo,
+  sin presentar como medidos los días internos de cada intervalo.
+
+**Disponibilidad temporal:** para fechas del estado anteriores al 16/09/2026
+se utiliza sólo 2025. Desde esa fecha, incluidas las ejecuciones de 2027,
+se incorporan ambas referencias con igual peso, sin ponderar por densidad ni
+número de visitas. Se mantienen las exclusiones de 2010, 2015, Balcarce y
+San Pedro. La referencia cambia el ancla del denominador estacional; no
+reentrena la ANN ni modifica sus flujos sin normalizar o el reloj térmico.
+
+Antes del 05/02, la curva 2026 permanece desconocida y el resumen usa 2025.
+Al comenzar la segunda serie, un cambio en el número de curvas puede reducir
+el cuantil diario. Para que el ancla de progreso no retroceda, se utiliza su
+máximo acumulado. La tabla conserva también los cuantiles `Empirico` sin esa
+regularización y las curvas `Progreso_2025` y `Progreso_2026` originales.
+Después del 16/09, la referencia 2026 mantiene el total de su ventana como
+supuesto de normalización. El último registro **no certifica el cierre
+biológico de la emergencia** ni el agotamiento del banco de semillas.
+
+Dos campañas no permiten cuantificar robustamente la variabilidad entre años.
+P10 y P90 son resúmenes descriptivos, no intervalos de confianza. El total
+observado parcial de un lote no se supone igual a su potencial completo;
+con conteos cargados se estima el potencial a partir de sus intervalos o se
+utiliza un valor previo aportado por el usuario. Consultar 2026 después de
+incorporar su referencia es una reconstrucción retrospectiva, no una
+validación predictiva independiente.
 
 La referencia se recarga en cada ejecución para evitar tablas de versiones
 anteriores conservadas por Streamlit. La pestaña Trazabilidad muestra las
-curvas utilizadas y excluidas. Aplicación, escenarios y calibración utilizan
-la misma selección. Se regeneró el perfil 2026 con su nueva huella; los
-parámetros y resultados numéricos del ajuste y evaluación permanecen iguales.
+curvas utilizadas y excluidas y permite descargar la referencia activa.
+Aplicación, escenarios y calibración utilizan el mismo criterio de fecha.
+El ajuste al cierre incluye las dos referencias; cada evaluación temporal
+anterior al cierre conserva únicamente 2025. Se regeneró el perfil con su
+nueva huella, que también incluye el CSV de referencia 2026. Los parámetros
+y las métricas redondeadas del ajuste y evaluación permanecen iguales.
 
 Consulte [MODEL_PROVENANCE.md](MODEL_PROVENANCE.md) para la revisión de origen,
 los hashes y la correspondencia científica.
@@ -165,7 +193,8 @@ mismo motor y referencia utilizados al ajustar. Si se asimilan conteos de
 asimilación. El motivo aparece junto al interruptor. El ajuste no reduce
 automáticamente la incertidumbre.
 
-Los datos adjuntos se conservan como referencia de calibración; no se cargan
+Los datos adjuntos se utilizan para calibración y para la referencia estacional
+local, según la fecha del estado; no se cargan
 automáticamente en SQLite. Para asimilarlos en un lote, descargue el CSV desde
 **Calibración por sitio** y cárguelo en **Observaciones**.
 

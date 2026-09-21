@@ -13,7 +13,7 @@ from predweem_twin.calibration import (
 )
 from predweem_twin.core import ModelParameters, PracticalANNModel, run_predweem
 from predweem_twin.observations import prepare_observations
-from predweem_twin.seasonal import load_seasonal_reference
+from predweem_twin.seasonal import load_local_seasonal_reference
 
 
 ROOT = Path(__file__).parents[1]
@@ -135,9 +135,7 @@ def test_known_transformation_can_be_learned_without_seasonal_total():
 def real_data():
     weather = pd.read_csv(DATA / "tres_arroyos_2026_weather.csv")
     model = PracticalANNModel.from_directory(ROOT / "models")
-    reference = load_seasonal_reference(
-        ROOT / "models/modelo_clusters_k3.pkl", excluded_years=("2010", "2015"), include_patterns=("tresas",),
-    )
+    reference = load_local_seasonal_reference(ROOT, as_of="2026-09-16")
     trajectory = run_predweem(
         weather, model, ModelParameters(),
         normalization_as_of="2026-09-16", seasonal_reference=reference,
@@ -184,7 +182,14 @@ def test_calibration_keeps_tres_arroyos_decay_and_local_reference(real_data):
     assert saved["seasonal_reference"]["excluded_sites"] == ["balcarce", "san pedro"]
     assert "balcarce" not in saved["seasonal_reference"]["campaigns"].lower()
     assert "san pedro" not in saved["seasonal_reference"]["campaigns"].lower()
-    assert saved["seasonal_reference"]["n_campaigns"] == 1
+    assert saved["seasonal_reference"]["n_campaigns"] == 2
+    assert saved["seasonal_reference"]["source_2026"]["sample_count"] == 17
+
+
+def test_temporal_calibration_checks_do_not_use_the_2026_total():
+    holdout = pd.read_csv(DATA / "tres_arroyos_2026_holdout.csv")
+    assert holdout["Campanas_referencia"].astype(str).eq("2025").all()
+    assert pd.to_datetime(holdout["Corte_entrenamiento"]).lt("2026-09-16").all()
 
 
 def test_fit_matches_persisted_profile_and_does_not_mutate_network(real_data):

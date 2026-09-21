@@ -24,7 +24,7 @@ from predweem_twin.calibration import (  # noqa: E402
 )
 from predweem_twin.core import ModelParameters, PracticalANNModel, run_predweem  # noqa: E402
 from predweem_twin.observations import prepare_observations, read_observation_file  # noqa: E402
-from predweem_twin.seasonal import EXCLUDED_SITES, load_seasonal_reference  # noqa: E402
+from predweem_twin.seasonal import EXCLUDED_SITES, load_local_seasonal_reference  # noqa: E402
 
 
 def build_calibration(observations_path, weather_path, output_path, site="Tres Arroyos",
@@ -50,16 +50,14 @@ def build_calibration(observations_path, weather_path, output_path, site="Tres A
     if "TipoDato" in weather and weather["TipoDato"].eq("Pronostico").any():
         raise ValueError("La calibración histórica no admite filas de pronóstico.")
     model = PracticalANNModel.from_directory(ROOT / "models")
-    reference = load_seasonal_reference(
-        ROOT / "models/modelo_clusters_k3.pkl", excluded_years=("2010", "2015"),
-        include_patterns=("tresas",),
-    )
+    reference = load_local_seasonal_reference(ROOT, as_of=last_count)
     parameters = ModelParameters(cobertura_pct=coverage, w_max=w_max)
 
     def simulate(cutoff, end=None):
         return run_predweem(
             weather.loc[weather["Fecha"] <= (end if end is not None else cutoff)],
-            model, parameters, normalization_as_of=cutoff, seasonal_reference=reference,
+            model, parameters, normalization_as_of=cutoff,
+            seasonal_reference=load_local_seasonal_reference(ROOT, as_of=cutoff),
         )
 
     trajectory = simulate(last_count)
@@ -101,6 +99,7 @@ def build_calibration(observations_path, weather_path, output_path, site="Tres A
             "Fecha_evaluacion": target_date.date().isoformat(),
             "Dias_intervalo": int((target_date - cutoff).days),
             "N_muestreos_ajuste": count,
+            "Campanas_referencia": load_local_seasonal_reference(ROOT, as_of=cutoff)["Campanas_Anos"].iloc[0],
             "Observado_PLM2": float(target["Flujo_observado_PLM2"]),
             "Base_PLM2": base,
             "Calibrado_PLM2": calibrated,
@@ -147,9 +146,11 @@ def build_calibration(observations_path, weather_path, output_path, site="Tres A
             "excluded_years": ["2010", "2015"],
             "excluded_sites": list(EXCLUDED_SITES),
             "excluded_campaigns": reference["Campanas_Excluidas"].iloc[0],
-            "scope": "Referencia local Tres Arroyos 2025; una campaña",
+            "scope": "Referencia local Tres Arroyos " + reference["Campanas_Anos"].iloc[0],
             "n_campaigns": int(reference["N_Campanas"].iloc[0]),
             "campaigns": reference["Campanas"].iloc[0],
+            "source_2026": reference.attrs["source_2026"],
+            "availability_rule": "2026 sólo desde su último conteo; los cortes anteriores utilizan 2025",
         },
         "source": {
             **source_metadata,
@@ -169,7 +170,7 @@ def build_calibration(observations_path, weather_path, output_path, site="Tres A
             f"Cobertura de {coverage:g} % y Wmax de {w_max:g} mm son supuestos de la configuración operativa; el archivo no informa manejo ni cobertura.",
             "El archivo FECHA + PLM2 no incluye repeticiones. Se utiliza un piso de ponderación común, no un error de muestreo medido.",
             "Se conserva el techo del 50 % y decaimiento desde el 15/04 del motor Tres Arroyos. No se incorpora extinción post-pico de otra localidad.",
-            "La referencia estacional local sólo incluye una campaña (2025); sus percentiles no describen robustamente la variabilidad entre años.",
+            "La referencia reúne 2025 y la ventana registrada de 2026 con igual peso; sus percentiles no describen robustamente la variabilidad entre años. En los cortes previos al cierre 2026 utiliza sólo 2025.",
             "La meteorología del ajuste incluye un dato ECMWF provisional el 16/09/2026; los demás días son observaciones SIGA–INTA Barrow.",
             "La transformación no crea cohortes en fechas bloqueadas por el motor biofísico.",
             "Un parámetro en su límite indica que persisten diferencias estructurales.",

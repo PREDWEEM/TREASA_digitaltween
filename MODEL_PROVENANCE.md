@@ -47,13 +47,27 @@ modifica el reloj térmico ni los pesos.
 
 Se selecciona `test -emerel tresas 2025.xlsx` del clasificador original mediante
 el filtro `tresas`, manteniendo la exclusión de 2010 y 2015 y excluyendo
-explícitamente Balcarce y San Pedro antes de calcular los percentiles. Es una referencia
-local de una campaña; sus percentiles no cuantifican robustamente variación
-entre años. El archivo binario del clasificador no se modifica.
+explícitamente Balcarce y San Pedro. El archivo binario no se modifica.
+`load_local_seasonal_reference` incorpora además los conteos originales
+`data/calibration/tres_arroyos_2026_counts.csv` desde su última fecha,
+16/09/2026. Antes de ese corte, incluso en evaluaciones temporales, utiliza
+exclusivamente 2025. El perfil JSON registra las fuentes y sus hashes.
+
+La curva 2026 es el acumulado de los 17 registros dividido por el total
+observado del 05/02 al 16/09, con interpolación lineal del acumulado entre
+visitas. Conserva las masas por intervalo, no atribuye observaciones diarias
+ni ceros previos al inicio. Cada campaña tiene igual peso en los cuantiles.
+La envolvente de máximo acumulado evita un retroceso del ancla al cambiar
+la disponibilidad de curvas; se conservan cuantiles empíricos sin modificar
+para auditoría. Tras el último conteo se mantiene 1 como referencia de esa
+ventana, sin afirmar ausencia de nacimientos posteriores ni cierre biológico.
+Dos campañas no permiten estimar probabilidades robustas.
 
 El perfil 2026 registra los filtros y nombres incluidos/excluidos y se regenera
-para actualizar su huella. Como la selección ya era exclusivamente local,
-esta revisión conserva exactamente los parámetros, ajuste y evaluación temporal.
+para actualizar su huella, incluyendo el CSV 2026. El ajuste final utiliza
+ambas referencias y los cortes temporales anteriores al 16/09 sólo 2025.
+Esta revisión conserva los parámetros y las métricas redondeadas del ajuste
+y evaluación temporal, porque al cierre ambas referencias alcanzan 1.
 La referencia se lee en cada ejecución de la interfaz, evitando resultados
 obsoletos de la caché de Streamlit. Se conservan el anclaje estacional, la ANN,
 el motor fisiológico y los datos de campo y meteorología originales.

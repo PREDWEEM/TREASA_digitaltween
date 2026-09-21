@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "method": "monotone_logit_v1",
-  "profile_id": "tres arroyos-2026-09-16-v1-57b1c538b3",
+  "profile_id": "tres arroyos-2026-09-16-v1-8ee30ed2f3",
   "site": "Tres Arroyos",
   "status": "experimental_una_campana",
   "training_year": 2026,
@@ -17,18 +17,18 @@
     "n_observations": 17,
     "n_intervals": 16,
     "observed_window_total_plm2": 12089.666666666666,
-    "rmse_base_plm2": 1082.7876164147585,
-    "rmse_calibrated_plm2": 383.20033452905795,
+    "rmse_base_plm2": 1082.7876164147588,
+    "rmse_calibrated_plm2": 383.2003345290575,
     "weighted_mse_base": 1.4141479938356043,
-    "weighted_mse_calibrated": 0.17711692369197757,
+    "weighted_mse_calibrated": 0.17711692369197712,
     "regularization": 0.05,
-    "nuisance_scale_base": 12089.666666666673,
+    "nuisance_scale_base": 12089.66666666667,
     "nuisance_scale_calibrated": 12089.666666666666,
     "parameter_at_bound": true
   },
   "observations_start": "2026-02-05",
   "initial_zero_reference": true,
-  "model_fingerprint": "8230370ea64f0805735f5183b99dcb2b49557c52e9c28e7d1b4434842aef8285",
+  "model_fingerprint": "1ced09f4419d1adba4d74653682a24d55bc8bc72496805580f855653dc5af9ac",
   "model_parameters": {
     "cobertura_pct": 20.0,
     "w_max": 18.81,
@@ -65,9 +65,21 @@
       "san pedro"
     ],
     "excluded_campaigns": "2012.xlsx, 2009.xlsx, 2013.xlsx, 2024.xlsx, 2015.xlsx, 2023.xlsx, 2010.xlsx, 2014.xlsx, 2008.xlsx, 2011.xlsx, emererel2025 balcarce.xlsx, emrel sp 2025 san pedro.xlsx",
-    "scope": "Referencia local Tres Arroyos 2025; una campaña",
-    "n_campaigns": 1,
-    "campaigns": "test -emerel tresas 2025.xlsx"
+    "scope": "Referencia local Tres Arroyos 2025, 2026",
+    "n_campaigns": 2,
+    "campaigns": "test -emerel tresas 2025.xlsx, tres_arroyos_2026_counts.csv",
+    "source_2026": {
+      "path": "data/calibration/tres_arroyos_2026_counts.csv",
+      "sha256": "9f0d85dda74dabc48bdc2e4f4390b7c6a537dfd22e8ef7a3a27fab1540fd45b6",
+      "start": "2026-02-05",
+      "end": "2026-09-16",
+      "sample_count": 17,
+      "window_total_plm2": 12089.666666666668,
+      "used": true,
+      "processing": "acumulado / total registrado; interpolación lineal entre visitas",
+      "scope": "ventana registrada; no certifica el cierre biológico de la campaña"
+    },
+    "availability_rule": "2026 sólo desde su último conteo; los cortes anteriores utilizan 2025"
   },
   "source": {
     "uploaded_filename": "VALIDA (1) (4)(2).xlsx",
@@ -133,7 +145,7 @@
     "Cobertura de 20 % y Wmax de 18.81 mm son supuestos de la configuración operativa; el archivo no informa manejo ni cobertura.",
     "El archivo FECHA + PLM2 no incluye repeticiones. Se utiliza un piso de ponderación común, no un error de muestreo medido.",
     "Se conserva el techo del 50 % y decaimiento desde el 15/04 del motor Tres Arroyos. No se incorpora extinción post-pico de otra localidad.",
-    "La referencia estacional local sólo incluye una campaña (2025); sus percentiles no describen robustamente la variabilidad entre años.",
+    "La referencia reúne 2025 y la ventana registrada de 2026 con igual peso; sus percentiles no describen robustamente la variabilidad entre años. En los cortes previos al cierre 2026 utiliza sólo 2025.",
     "La meteorología del ajuste incluye un dato ECMWF provisional el 16/09/2026; los demás días son observaciones SIGA–INTA Barrow.",
     "La transformación no crea cohortes en fechas bloqueadas por el motor biofísico.",
     "Un parámetro en su límite indica que persisten diferencias estructurales.",
