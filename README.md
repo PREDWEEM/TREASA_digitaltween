@@ -132,15 +132,17 @@ El **flujo diario** se muestra en el gráfico izquierdo y la **emergencia acumul
 en el derecho. Cada gráfico tiene su propio eje Y, con el mismo calendario y la
 misma fecha de consulta. El flujo conserva las barras y el acumulado, las curvas
 y puntos de campo.
-El fondo tenue muestra las campañas locales disponibles y el resumen del pool,
+El fondo tenue muestra la curva 2025 y el resumen del pool histórico local,
 junto con el flujo diario derivado de ese resumen. Es una referencia
 **orientativa**, no una predicción meteorológica ni una serie de conteos diarios.
 Ambos flujos comparten el eje Y del gráfico izquierdo y se expresan como incremento diario del
 acumulado multiplicado por 100. El histórico se refiere al total de sus ventanas
 registradas; el gemelo, al total estacional estimado. No se dividen por el máximo
 diario de cada serie: un valor de 2 equivale a un avance de 2 puntos porcentuales.
-La curva individual 2026 se limita a su ventana registrada; el resumen conserva
-los supuestos de normalización descritos arriba.
+La campaña 2026 sigue formando parte del pool cuando corresponde por fecha,
+pero no se dibuja como curva individual. Los datos de ambas campañas siguen
+disponibles en Trazabilidad. El resumen conserva los supuestos de normalización
+descritos arriba.
 
 Una línea vertical identifica la fecha de consulta. El estado actualizado se
 muestra hasta esa fecha y su proyección discontinua alcanza sólo la meteorología

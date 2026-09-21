@@ -87,19 +87,18 @@ def trajectory_charts(
                                "%{y:.2f}%<br>Derivado de curvas históricas<extra></extra>"),
             ),
         )
-        for year, color in [(2025, "rgba(150,154,168,.48)"), (2026, "rgba(167,176,151,.48)")]:
-            column = f"Progreso_{year}"
-            if column in historical:
-                cumulative_figure.add_trace(
-                    go.Scatter(
-                        x=historical["Fecha"], y=historical[column] * 100,
-                        name=f"Histórico {year} · orientativo",
-                        mode="lines", line=dict(color=color, width=1.4),
-                        connectgaps=False,
-                        hovertemplate=(f"%{{x|%d/%m/%Y}}<br>Referencia {year}: "
-                                       "%{y:.1f}%<extra>Solo orientativa</extra>"),
-                    ),
-                )
+        # La campaña 2026 permanece en el pool, sin una curva individual.
+        if "Progreso_2025" in historical:
+            cumulative_figure.add_trace(
+                go.Scatter(
+                    x=historical["Fecha"], y=historical["Progreso_2025"] * 100,
+                    name="Histórico 2025 · orientativo",
+                    mode="lines", line=dict(color="rgba(150,154,168,.48)", width=1.4),
+                    connectgaps=False,
+                    hovertemplate=("%{x|%d/%m/%Y}<br>Referencia 2025: "
+                                   "%{y:.1f}%<extra>Solo orientativa</extra>"),
+                ),
+            )
         cumulative_figure.add_trace(
             go.Scatter(
                 x=historical["Fecha"], y=historical["Progreso_Mediano"] * 100,
