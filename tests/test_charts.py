@@ -103,3 +103,47 @@ def test_field_audit_is_only_in_cumulative_chart_and_stops_at_cutoff(reference):
     field = next(trace for trace in cumulative.data if trace.name == "Estado estimado desde campo")
     assert field.yaxis in (None, "y")
     assert pd.to_datetime(field.x).max() == pd.Timestamp("2027-05-03")
+
+
+def test_weekly_flows_conserve_totals_use_common_weeks_and_preserve_cumulative(reference):
+    frame = trajectory()
+    # Una señal grande fuera del horizonte no debe contaminar la última semana.
+    frame.loc[frame.Fecha.gt("2027-05-12"), "EMERREL_TWIN"] = .5
+    daily, daily_cumulative = trajectory_charts(
+        frame, None, "2027-05-05", seasonal_reference=reference,
+    )
+    weekly, weekly_cumulative = trajectory_charts(
+        frame, None, "2027-05-05", seasonal_reference=reference, flow_frequency="Semanal",
+    )
+    assert weekly_cumulative.to_json() == daily_cumulative.to_json()
+    for daily_trace, weekly_trace in zip(daily.data, weekly.data):
+        assert np.nansum(weekly_trace.y) == pytest.approx(np.nansum(daily_trace.y))
+    history, twin = weekly.data
+    assert set(twin.x).issubset(set(history.x))
+    assert list(pd.to_datetime(twin.x)) == list(pd.to_datetime([
+        "2027-04-19", "2027-04-26", "2027-05-03", "2027-05-10",
+    ]))
+    assert list(twin.y) == pytest.approx([1.6, 11.2, 11.2, 4.8])
+    assert list(twin.marker.pattern.shape) == ["/", "", "", "/"]
+    assert "3/7 días" in twin.customdata[-1][1]
+    assert "10/05–12/05" in twin.customdata[-1][2]
+    assert "3 día(s) de proyección" in twin.customdata[-1][3]
+    assert weekly.layout.yaxis.ticksuffix == " %"
+
+
+def test_weekly_chart_keeps_missing_flows_unknown_and_clips_october_boundary():
+    dates = pd.date_range("2027-09-20", "2027-10-05")
+    frame = pd.DataFrame({
+        "Fecha": dates, "EMERREL_TWIN": .01,
+        "EMERAC_TWIN": .5, "EMERAC_NORMALIZADA": .5, "TT_DESDE_PICO": 0.,
+    })
+    frame.loc[frame.Fecha.lt("2027-09-27"), "EMERREL_TWIN"] = np.nan
+    # Fuera del eje: ni se dibuja ni se suma a la semana que contiene el 1/10.
+    frame.loc[frame.Fecha.gt("2027-10-01"), "EMERREL_TWIN"] = .9
+    weekly, _ = trajectory_charts(frame, None, "2027-09-29", flow_frequency="Semanal")
+    twin = weekly.data[0]
+    assert np.isnan(twin.y[0])
+    assert twin.y[1] == pytest.approx(5.)
+    assert "5/7 días" in twin.customdata[1][1]
+    assert "27/09–01/10" in twin.customdata[1][2]
+    assert pd.Timestamp(weekly.layout.xaxis.range[1]) == pd.Timestamp("2027-10-01")
