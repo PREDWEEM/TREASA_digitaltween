@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from predweem_twin.assimilation import assimilate_observations
-from predweem_twin.charts import annual_historical_reference, trajectory_chart
+from predweem_twin.charts import annual_historical_reference, trajectory_charts
 from predweem_twin.calibration import (
     apply_site_calibration, load_site_profile, model_fingerprint,
 )
@@ -356,18 +356,22 @@ with tab_state:
         ),
     )
     st.caption(calibration_audit["reason"])
-    st.plotly_chart(
-        trajectory_chart(
-            twin_trajectory,
-            active_observations,
-            as_of,
-            assimilation_audit,
-            parameters.tt_control,
-            parameters.tt_limite,
-            seasonal_reference=seasonal_reference,
-        ),
-        width="stretch",
+    daily_figure, cumulative_figure = trajectory_charts(
+        twin_trajectory,
+        active_observations,
+        as_of,
+        assimilation_audit,
+        parameters.tt_control,
+        parameters.tt_limite,
+        seasonal_reference=seasonal_reference,
     )
+    daily_column, cumulative_column = st.columns(2)
+    with daily_column:
+        st.subheader("Flujo diario de emergencia")
+        st.plotly_chart(daily_figure, width="stretch", key="daily_emergence_chart")
+    with cumulative_column:
+        st.subheader("Emergencia acumulada")
+        st.plotly_chart(cumulative_figure, width="stretch", key="cumulative_emergence_chart")
     historical_view = annual_historical_reference(seasonal_reference, as_of)
     historical_at_cutoff = historical_view.loc[
         historical_view["Fecha"].eq(pd.Timestamp(as_of)), "Progreso_Mediano"
