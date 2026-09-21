@@ -45,6 +45,9 @@ Si ocurre lo último, vuelva a habilitar el workflow desde Actions.
 
 ## Funcionamiento
 
+- **Configuración del gemelo:** panel desplegable dentro del cuerpo principal,
+  organizado en lote y fecha, meteorología y cobertura, y parámetros. Todos los
+  controles se encuentran allí; se elimina el panel lateral y su botón de apertura.
 - **Estado del lote:** emergencia acumulada, barras azules de flujo diario,
   curva base, curva calibrada, estado actualizado y banda amarilla 600–800 °Cd.
   El eje horizontal muestra fechas calendario.

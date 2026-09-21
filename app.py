@@ -40,14 +40,19 @@ from predweem_twin.weather import (
 
 BASE = Path(__file__).parent
 CALIBRATION_DIR = BASE / "data" / "calibration"
-st.set_page_config(page_title="PREDWEEM Digital Twin", page_icon="🌱", layout="wide")
+st.set_page_config(
+    page_title="PREDWEEM Digital Twin", page_icon="🌱", layout="wide",
+    initial_sidebar_state="collapsed",
+)
 
 st.markdown(
     """
     <style>
       .stApp {background: linear-gradient(180deg,#f5f8f3 0%,#eef3ed 100%);}
-      [data-testid="stSidebar"] {background:#11291f;}
-      [data-testid="stSidebar"] * {color:#f5faf7;}
+      [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"],
+      [data-testid="stExpandSidebarButton"] {
+        display:none !important;
+      }
       div[data-testid="stMetric"] {background:white;border:1px solid #dfe8e1;
         border-radius:16px;padding:18px;box-shadow:0 8px 22px rgba(20,50,35,.06)}
       .hero {padding:22px 26px;border-radius:20px;color:white;margin-bottom:18px;
@@ -102,48 +107,57 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-with st.sidebar:
-    st.markdown("## Configuración del gemelo")
-    site_id = st.text_input("Identificador del lote", "Tres Arroyos-01")
-    calibration_site = st.selectbox("Localidad del lote", ["Tres Arroyos", "Otra localidad"])
-    latitude = st.number_input("Latitud", value=-38.4500, format="%.6f")
-    longitude = st.number_input("Longitud", value=-60.2763, format="%.6f")
-    source_option = st.radio(
-        "Meteorología",
-        ["SIGA Barrow + ECMWF operativa", "Open-Meteo", "Cargar archivo"],
-    )
-    uploaded_weather = None
-    if source_option == "Cargar archivo":
-        uploaded_weather = st.file_uploader("CSV o Excel", type=["csv", "xlsx", "xls"])
-    coverage_mode = st.radio(
-        "Cobertura de rastrojo",
-        ["Constante", "Serie observada"],
-        help=(
-            "La serie observada se carga por lote con las columnas "
-            "FECHA + COBERTURA_PCT."
-        ),
-    )
-    coverage = st.slider(
-        "Cobertura constante o de respaldo (%)", 0, 100, 20, 5
-    )
-    w_max = st.number_input(
-        "Agua superficial Wmax (mm)", min_value=5.0, max_value=60.0,
-        value=18.81, step=0.1, format="%.2f",
-    )
-    model_uncertainty = st.slider("Incertidumbre del modelo", 0.03, 0.30, 0.12, 0.01)
-    seasonal_potential_input = st.number_input(
-        "Potencial estacional previo (plantas/m²)",
-        min_value=0.0,
-        value=0.0,
-        step=100.0,
-        help=(
-            "Use 0 para estimación automática. Ingrese un valor histórico "
-            "del lote si está disponible."
-        ),
-    )
-    seasonal_potential_prior = (
-        float(seasonal_potential_input) if seasonal_potential_input > 0 else None
-    )
+with st.expander("Configuración del gemelo", expanded=True):
+    lot_column, weather_column, parameter_column = st.columns(3, gap="large")
+    with lot_column:
+        st.markdown("**Lote y fecha**")
+        site_id = st.text_input("Identificador del lote", "Tres Arroyos-01")
+        calibration_site = st.selectbox("Localidad del lote", ["Tres Arroyos", "Otra localidad"])
+        latitude = st.number_input("Latitud", value=-38.4500, format="%.6f")
+        longitude = st.number_input("Longitud", value=-60.2763, format="%.6f")
+        # La fecha necesita la meteorología; se reserva aquí su lugar visible.
+        date_control = st.container()
+    with weather_column:
+        st.markdown("**Meteorología y cobertura**")
+        source_option = st.radio(
+            "Meteorología",
+            ["SIGA Barrow + ECMWF operativa", "Open-Meteo", "Cargar archivo"],
+        )
+        uploaded_weather = None
+        if source_option == "Cargar archivo":
+            uploaded_weather = st.file_uploader("CSV o Excel", type=["csv", "xlsx", "xls"])
+        coverage_mode = st.radio(
+            "Cobertura de rastrojo",
+            ["Constante", "Serie observada"],
+            help=(
+                "La serie observada se carga por lote con las columnas "
+                "FECHA + COBERTURA_PCT."
+            ),
+        )
+        coverage = st.slider(
+            "Cobertura constante o de respaldo (%)", 0, 100, 20, 5
+        )
+        coverage_notice = st.empty()
+    with parameter_column:
+        st.markdown("**Parámetros del gemelo**")
+        w_max = st.number_input(
+            "Agua superficial Wmax (mm)", min_value=5.0, max_value=60.0,
+            value=18.81, step=0.1, format="%.2f",
+        )
+        model_uncertainty = st.slider("Incertidumbre del modelo", 0.03, 0.30, 0.12, 0.01)
+        seasonal_potential_input = st.number_input(
+            "Potencial estacional previo (plantas/m²)",
+            min_value=0.0,
+            value=0.0,
+            step=100.0,
+            help=(
+                "Use 0 para estimación automática. Ingrese un valor histórico "
+                "del lote si está disponible."
+            ),
+        )
+        seasonal_potential_prior = (
+            float(seasonal_potential_input) if seasonal_potential_input > 0 else None
+        )
     st.markdown("**Perfil fisiológico Tres Arroyos**")
     st.caption(
         "Latencia JD 25 · desde el 15/04, techo del 50 % del máximo previo "
@@ -169,7 +183,7 @@ max_date = weather_dates.max().date()
 last_observed_date = pd.Timestamp(last_observed_weather_date(weather)).date()
 max_state_date = min(last_observed_date, max_date)
 default_date = min(max(date.today(), min_date), max_state_date)
-as_of = st.sidebar.date_input(
+as_of = date_control.date_input(
     "Fecha del estado",
     value=default_date,
     min_value=min_date,
@@ -203,7 +217,7 @@ coverage_series_for_model = (
     else None
 )
 if coverage_mode == "Serie observada" and active_coverage.empty:
-    st.sidebar.warning(
+    coverage_notice.warning(
         "No hay cobertura observada disponible hasta esta fecha. "
         "Se utiliza el valor de respaldo."
     )
