@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 from predweem_twin.assimilation import assimilate_observations
+from predweem_twin.charts import annual_historical_reference, trajectory_chart
 from predweem_twin.calibration import (
     apply_site_calibration, load_site_profile, model_fingerprint,
 )
@@ -27,7 +27,6 @@ from predweem_twin.seasonal import load_local_seasonal_reference
 from predweem_twin.state import (
     build_twin_snapshot,
     milestone_dates,
-    thermal_window_dates,
 )
 from predweem_twin.storage import TwinStore
 from predweem_twin.weather import (
@@ -89,131 +88,6 @@ def load_open_meteo(latitude, longitude, start_date):
     return fetch_open_meteo(latitude, longitude, start_date)
 
 
-def trajectory_chart(
-    df,
-    observations,
-    as_of,
-    audit=None,
-    lower_thermal_time=600.0,
-    upper_thermal_time=800.0,
-):
-    figure = make_subplots(specs=[[{"secondary_y": True}]])
-    figure.add_trace(
-        go.Bar(
-            x=df["Fecha"],
-            y=df["EMERREL_TWIN"] * 100,
-            name="Flujo diario Twin",
-            marker_color="#3b82f6",
-            opacity=0.62,
-        ),
-        secondary_y=False,
-    )
-    figure.add_trace(
-        go.Scatter(
-            x=df["Fecha"],
-            y=df.get("EMERAC_BASE_SIN_CALIBRAR", df["EMERAC_NORMALIZADA"]) * 100,
-            name="PREDWEEM base",
-            line=dict(color="#83938b", width=2, dash="dot"),
-        ),
-        secondary_y=True,
-    )
-    if "Calibracion_Aplicada" in df and df["Calibracion_Aplicada"].any():
-        figure.add_trace(
-            go.Scatter(
-                x=df["Fecha"], y=df["EMERAC_CALIBRADA"] * 100,
-                name="Calibración Tres Arroyos", line=dict(color="#9260bd", width=2),
-            ),
-            secondary_y=True,
-        )
-    figure.add_trace(
-        go.Scatter(
-            x=df["Fecha"],
-            y=df["EMERAC_TWIN"] * 100,
-            name="Estado actualizado",
-            line=dict(color="#155d3e", width=4),
-            fill="tozeroy",
-            fillcolor="rgba(66,137,87,.10)",
-        ),
-        secondary_y=True,
-    )
-    if audit is not None and not audit.empty and "Estado_campo_estimado" in audit:
-        figure.add_trace(
-            go.Scatter(
-                x=audit["Fecha_asimilada"],
-                y=audit["Estado_campo_estimado"] * 100,
-                name="Estado estimado desde campo",
-                mode="markers",
-                marker=dict(color="#df5b3f", size=11, line=dict(color="white", width=2)),
-            ),
-            secondary_y=True,
-        )
-    elif observations is not None and not observations.empty:
-        figure.add_trace(
-            go.Scatter(
-                x=observations["Fecha"],
-                y=observations["Observado"] * 100,
-                name="Conteo de campo",
-                mode="markers",
-                marker=dict(color="#df5b3f", size=11, line=dict(color="white", width=2)),
-            ),
-            secondary_y=True,
-        )
-    thermal_start, thermal_end = thermal_window_dates(
-        df, lower_thermal_time, upper_thermal_time
-    )
-    if thermal_start is not None:
-        displayed_thermal_end = thermal_end or pd.Timestamp(df["Fecha"].max())
-        figure.add_vrect(
-            x0=thermal_start,
-            x1=displayed_thermal_end,
-            fillcolor="rgba(255,193,7,.22)",
-            line_width=0,
-            annotation_text=(
-                f"Ventana fenológica {lower_thermal_time:.0f}–"
-                f"{upper_thermal_time:.0f} °Cd"
-            ),
-            annotation_position="top right",
-            annotation_font_color="#6f5200",
-        )
-        figure.add_vline(
-            x=thermal_start.timestamp() * 1000,
-            line_color="#c48a00",
-            line_dash="dot",
-            line_width=1.5,
-        )
-        if thermal_end is not None:
-            figure.add_vline(
-                x=thermal_end.timestamp() * 1000,
-                line_color="#c48a00",
-                line_dash="dot",
-                line_width=1.5,
-            )
-    figure.add_vline(x=pd.Timestamp(as_of).timestamp() * 1000, line_color="#162f25", line_dash="dash")
-    forecast_start = pd.Timestamp(as_of) + pd.Timedelta(days=1)
-    if pd.Timestamp(df["Fecha"].max()) >= forecast_start:
-        figure.add_vrect(
-            x0=forecast_start,
-            x1=pd.Timestamp(df["Fecha"].max()),
-            fillcolor="rgba(223,127,52,.10)",
-            line_width=0,
-            annotation_text="Pronóstico 7 días",
-            annotation_position="top left",
-        )
-    figure.update_yaxes(title_text="Flujo diario (%)", rangemode="tozero", secondary_y=False)
-    figure.update_yaxes(
-        title_text="Emergencia acumulada (%)", range=[0, 105],
-        showgrid=False, secondary_y=True,
-    )
-    figure.update_layout(
-        height=470,
-        margin=dict(l=10, r=10, t=30, b=10),
-        legend=dict(orientation="h", y=1.12),
-        hovermode="x unified",
-        plot_bgcolor="white",
-        paper_bgcolor="rgba(0,0,0,0)",
-        bargap=0.15,
-    )
-    return figure
 
 
 st.markdown(
@@ -490,8 +364,27 @@ with tab_state:
             assimilation_audit,
             parameters.tt_control,
             parameters.tt_limite,
+            seasonal_reference=seasonal_reference,
         ),
         width="stretch",
+    )
+    historical_view = annual_historical_reference(seasonal_reference, as_of)
+    historical_at_cutoff = historical_view.loc[
+        historical_view["Fecha"].eq(pd.Timestamp(as_of)), "Progreso_Mediano"
+    ].iloc[0]
+    if pd.notna(historical_at_cutoff):
+        st.caption(
+            f"Referencia local {reference_years} al {pd.Timestamp(as_of):%d/%m}: "
+            f"{historical_at_cutoff:.1%} acumulado y "
+            f"{max(0.0, 1.0 - historical_at_cutoff):.1%} remanente histórico orientativo. "
+            "Estos porcentajes describen el pool histórico, no el estado actualizado del lote."
+        )
+    st.caption(
+        "Fondo tenue: trayectoria histórica orientativa. Barras y curvas de mayor contraste: "
+        "gemelo con la meteorología disponible y proyección de hasta siete días. "
+        "El flujo histórico diario se deriva de las curvas; no son conteos diarios. "
+        "El 100 % corresponde al total de las ventanas históricas registradas. "
+        "El tramo sin referencia disponible no equivale a ausencia de nuevos nacimientos."
     )
     left, right = st.columns([1.35, 1])
     with left:

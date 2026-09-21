@@ -120,6 +120,31 @@ La referencia se recarga en cada ejecución para evitar tablas de versiones
 anteriores conservadas por Streamlit. La pestaña Trazabilidad muestra las
 curvas utilizadas y excluidas y permite descargar la referencia activa.
 Aplicación, escenarios y calibración utilizan el mismo criterio de fecha.
+
+### Contexto histórico anual en el gráfico principal
+
+El eje temporal muestra enero–diciembre del año consultado. El **flujo diario**
+permanece en el eje izquierdo y la **emergencia acumulada** en el derecho.
+El fondo tenue muestra las campañas locales disponibles y el resumen del pool,
+junto con el flujo diario derivado de ese resumen. Es una referencia
+**orientativa**, no una predicción meteorológica ni una serie de conteos diarios.
+La curva individual 2026 se limita a su ventana registrada; el resumen conserva
+los supuestos de normalización descritos arriba.
+
+Una línea vertical identifica la fecha de consulta. El estado actualizado se
+muestra hasta esa fecha y su proyección discontinua alcanza sólo la meteorología
+disponible, como máximo siete días. Después sigue visible el contexto histórico.
+El calendario posterior al final del eje histórico se marca **«Sin referencia
+disponible»**: no se agregan ceros ni se extiende el acumulado al resto del año.
+La leyenda bajo el gráfico separa el remanente histórico orientativo del remanente
+estimado por el gemelo. El fondo no modifica cálculos, métricas, hitos o exportación.
+
+La vista admite el calendario de 2027 (y conserva mes/día en años bisiestos),
+pero no altera la campaña meteorológica operativa, cuyo cierre continúa siendo
+01/10/2026. Para una consulta real del 05/05/2027 se necesita habilitar esa campaña
+y disponer de su meteorología. Las pruebas del gráfico usan series sintéticas;
+no constituyen un pronóstico real de 2027.
+
 El ajuste al cierre incluye las dos referencias; cada evaluación temporal
 anterior al cierre conserva únicamente 2025. Se regeneró el perfil con su
 nueva huella, que también incluye el CSV de referencia 2026. Los parámetros
