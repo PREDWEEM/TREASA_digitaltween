@@ -106,7 +106,7 @@ def trajectory_chart(
             marker_color="#3b82f6",
             opacity=0.62,
         ),
-        secondary_y=True,
+        secondary_y=False,
     )
     figure.add_trace(
         go.Scatter(
@@ -115,7 +115,7 @@ def trajectory_chart(
             name="PREDWEEM base",
             line=dict(color="#83938b", width=2, dash="dot"),
         ),
-        secondary_y=False,
+        secondary_y=True,
     )
     if "Calibracion_Aplicada" in df and df["Calibracion_Aplicada"].any():
         figure.add_trace(
@@ -123,7 +123,7 @@ def trajectory_chart(
                 x=df["Fecha"], y=df["EMERAC_CALIBRADA"] * 100,
                 name="Calibración Tres Arroyos", line=dict(color="#9260bd", width=2),
             ),
-            secondary_y=False,
+            secondary_y=True,
         )
     figure.add_trace(
         go.Scatter(
@@ -134,7 +134,7 @@ def trajectory_chart(
             fill="tozeroy",
             fillcolor="rgba(66,137,87,.10)",
         ),
-        secondary_y=False,
+        secondary_y=True,
     )
     if audit is not None and not audit.empty and "Estado_campo_estimado" in audit:
         figure.add_trace(
@@ -145,7 +145,7 @@ def trajectory_chart(
                 mode="markers",
                 marker=dict(color="#df5b3f", size=11, line=dict(color="white", width=2)),
             ),
-            secondary_y=False,
+            secondary_y=True,
         )
     elif observations is not None and not observations.empty:
         figure.add_trace(
@@ -156,7 +156,7 @@ def trajectory_chart(
                 mode="markers",
                 marker=dict(color="#df5b3f", size=11, line=dict(color="white", width=2)),
             ),
-            secondary_y=False,
+            secondary_y=True,
         )
     thermal_start, thermal_end = thermal_window_dates(
         df, lower_thermal_time, upper_thermal_time
@@ -199,8 +199,11 @@ def trajectory_chart(
             annotation_text="Pronóstico 7 días",
             annotation_position="top left",
         )
-    figure.update_yaxes(title_text="Emergencia acumulada (%)", range=[0, 105], secondary_y=False)
-    figure.update_yaxes(title_text="Flujo diario (%)", rangemode="tozero", secondary_y=True)
+    figure.update_yaxes(title_text="Flujo diario (%)", rangemode="tozero", secondary_y=False)
+    figure.update_yaxes(
+        title_text="Emergencia acumulada (%)", range=[0, 105],
+        showgrid=False, secondary_y=True,
+    )
     figure.update_layout(
         height=470,
         margin=dict(l=10, r=10, t=30, b=10),
