@@ -383,6 +383,12 @@ with tab_state:
     with daily_column:
         st.subheader("Flujo diario de emergencia")
         st.plotly_chart(daily_figure, width="stretch", key="daily_emergence_chart")
+        st.caption(
+            "Ambas barras usan la misma escala: % del total por día "
+            "(2 % = +2 puntos porcentuales del acumulado). "
+            "Histórico: total de las ventanas registradas; gemelo: total estacional estimado. "
+            "La interpolación entre visitas y la combinación de campañas suavizan los picos históricos."
+        )
     with cumulative_column:
         st.subheader("Emergencia acumulada")
         st.plotly_chart(cumulative_figure, width="stretch", key="cumulative_emergence_chart")

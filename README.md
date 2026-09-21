@@ -139,6 +139,10 @@ Ambos flujos comparten el eje Y del gráfico izquierdo y se expresan como increm
 acumulado multiplicado por 100. El histórico se refiere al total de sus ventanas
 registradas; el gemelo, al total estacional estimado. No se dividen por el máximo
 diario de cada serie: un valor de 2 equivale a un avance de 2 puntos porcentuales.
+El eje del flujo y los cuadros al pasar el cursor muestran explícitamente `%`
+para las dos series. Los valores menores del histórico no son proporciones sin
+convertir: la interpolación entre visitas y la combinación de campañas suavizan
+sus picos respecto de una trayectoria con pulsos diarios concentrados.
 Las campañas 2025 y 2026 siguen formando parte del pool cuando corresponde por
 fecha, pero no se dibujan como curvas individuales. Sus datos siguen
 disponibles en Trazabilidad. El resumen conserva los supuestos de normalización

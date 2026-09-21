@@ -84,7 +84,9 @@ def trajectory_charts(
                 name="Flujo histórico · orientativo",
                 marker_color="rgba(144,158,167,.24)",
                 hovertemplate=("%{x|%d/%m/%Y}<br>Flujo histórico orientativo: "
-                               "%{y:.2f}%<br>Derivado de curvas históricas<extra></extra>"),
+                               "%{y:.2f} % del total/día<br>"
+                               "Total de las ventanas históricas registradas<br>"
+                               "Derivado del acumulado histórico<extra></extra>"),
             ),
         )
         # Las campañas se conservan en el pool, sin curvas individuales.
@@ -105,6 +107,9 @@ def trajectory_charts(
             name="Flujo diario del gemelo",
             marker_color="#3b82f6",
             opacity=0.62,
+            hovertemplate=("%{x|%d/%m/%Y}<br>Flujo diario del gemelo: "
+                           "%{y:.2f} % del total/día<br>"
+                           "Total estacional estimado<extra></extra>"),
         ),
     )
     cumulative_figure.add_trace(
@@ -246,6 +251,9 @@ def trajectory_charts(
             bargap=0.15,
             barmode="overlay",
         )
-    daily_figure.update_yaxes(title_text="Flujo diario (%)", rangemode="tozero")
+    daily_figure.update_yaxes(
+        title_text="Flujo diario (% del total)",
+        ticksuffix=" %", rangemode="tozero",
+    )
     cumulative_figure.update_yaxes(title_text="Emergencia acumulada (%)", range=[0, 105])
     return daily_figure, cumulative_figure
