@@ -128,15 +128,26 @@ Aplicación, escenarios y calibración utilizan el mismo criterio de fecha.
 
 El eje temporal muestra del **1 de enero al 1 de octubre** del año consultado.
 El recorte es visual y no vuelve a normalizar las series por el período visible.
-El **flujo diario** se muestra en el gráfico izquierdo y la **emergencia acumulada**
+El **flujo de emergencia** se muestra en el gráfico izquierdo y la **emergencia acumulada**
 en el derecho. Cada gráfico tiene su propio eje Y, con el mismo calendario y la
 misma fecha de consulta. El flujo conserva las barras y el acumulado, las curvas
 y puntos de campo.
+El selector **Mostrar flujo** ofrece **Semanal** (por defecto) y **Diario**.
+La vista semanal suma los porcentajes diarios en las mismas semanas de lunes a
+domingo para ambas series; no calcula promedios, no divide por el pico y no
+modifica la curva acumulada, el estado del gemelo ni las exportaciones diarias.
+Las semanas incompletas aparecen rayadas; el detalle indica los días disponibles
+y cuántos pertenecen a la proyección. No se extrapolan los días faltantes ni se
+incluyen datos posteriores al horizonte meteorológico. Para comparar magnitudes,
+se deben usar semanas completas en ambas series. Los límites del 1 de enero y
+1 de octubre también pueden producir semanas parciales.
+La agregación facilita comparar la distribución temporal, pero no elimina las
+diferencias entre el pool y el gemelo ni demuestra una mejora predictiva.
 El fondo tenue muestra el resumen del pool histórico local,
 junto con el flujo diario derivado de ese resumen. Es una referencia
 **orientativa**, no una predicción meteorológica ni una serie de conteos diarios.
-Ambos flujos comparten el eje Y del gráfico izquierdo y se expresan como incremento diario del
-acumulado multiplicado por 100. El histórico se refiere al total de sus ventanas
+Ambos flujos comparten el eje Y del gráfico izquierdo y se expresan como incremento del
+acumulado multiplicado por 100, diario o sumado por semana. El histórico se refiere al total de sus ventanas
 registradas; el gemelo, al total estacional estimado. No se dividen por el máximo
 diario de cada serie: un valor de 2 equivale a un avance de 2 puntos porcentuales.
 El eje del flujo y los cuadros al pasar el cursor muestran explícitamente `%`

@@ -370,6 +370,11 @@ with tab_state:
         ),
     )
     st.caption(calibration_audit["reason"])
+    flow_frequency = st.radio(
+        "Mostrar flujo", ["Semanal", "Diario"], horizontal=True,
+        key="flow_frequency",
+        help="La vista semanal suma ambos flujos de lunes a domingo y conserva el total acumulado.",
+    )
     daily_figure, cumulative_figure = trajectory_charts(
         twin_trajectory,
         active_observations,
@@ -378,17 +383,24 @@ with tab_state:
         parameters.tt_control,
         parameters.tt_limite,
         seasonal_reference=seasonal_reference,
+        flow_frequency=flow_frequency,
     )
     daily_column, cumulative_column = st.columns(2)
     with daily_column:
-        st.subheader("Flujo diario de emergencia")
+        st.subheader(f"Flujo {flow_frequency.lower()} de emergencia")
         st.plotly_chart(daily_figure, width="stretch", key="daily_emergence_chart")
         st.caption(
-            "Ambas barras usan la misma escala: % del total por día "
+            f"Ambas barras usan la misma escala: % del total por {'semana' if flow_frequency == 'Semanal' else 'día'} "
             "(2 % = +2 puntos porcentuales del acumulado). "
             "Histórico: total de las ventanas registradas; gemelo: total estacional estimado. "
             "La interpolación entre visitas y la combinación de campañas suavizan los picos históricos."
         )
+        if flow_frequency == "Semanal":
+            st.caption(
+                "Semanas de lunes a domingo: suma de los flujos diarios. "
+                "Las barras rayadas son parciales; al pasar el cursor se indican los días incluidos "
+                "y si contienen proyección. Compare semanas completas en ambas series."
+            )
     with cumulative_column:
         st.subheader("Emergencia acumulada")
         st.plotly_chart(cumulative_figure, width="stretch", key="cumulative_emergence_chart")
