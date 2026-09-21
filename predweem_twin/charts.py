@@ -46,6 +46,55 @@ def annual_historical_reference(reference, as_of):
     return frame
 
 
+def _weekly_flow_trace(trace, cutoff, year_start, display_end, historical=False):
+    """Suma porcentajes diarios en semanas comunes de lunes a domingo.
+
+    No renormaliza, completa datos ausentes ni extrapola semanas parciales.
+    Las barras comparten semanas, sin extenderse más allá de las fechas con
+    datos. El rayado identifica semanas con menos de siete días.
+    """
+    frame = pd.DataFrame({"Fecha": pd.to_datetime(trace.x), "Flujo": trace.y})
+    frame["Semana"] = frame["Fecha"] - pd.to_timedelta(frame["Fecha"].dt.dayofweek, unit="D")
+    dates, totals, widths, offsets, details, patterns = [], [], [], [], [], []
+    for monday, group in frame.groupby("Semana", sort=True):
+        sunday = monday + pd.Timedelta(days=6)
+        start = max(monday, year_start)
+        end = min(sunday, display_end)
+        valid = group.loc[group["Flujo"].notna()]
+        count = valid["Fecha"].nunique()
+        dates.append(start)
+        totals.append(group["Flujo"].sum(min_count=1))
+        first_day = max(start, valid["Fecha"].min()) if count else start
+        last_day = min(end, valid["Fecha"].max()) if count else end
+        widths.append(max(1, (last_day - first_day).days + 1) * 86400000 * .9)
+        offsets.append((first_day - start).days * 86400000)
+        patterns.append("/" if count < 7 else "")
+        coverage = f"{count}/7 días · " + ("semana completa" if count == 7 else "semana parcial")
+        available = (
+            f"Datos: {valid['Fecha'].min():%d/%m}–{valid['Fecha'].max():%d/%m}"
+            if count else "Sin datos disponibles"
+        )
+        if historical:
+            source = "Total de las ventanas históricas · orientativo"
+        else:
+            future_days = int((valid["Fecha"] > cutoff).sum())
+            source = "Total estacional estimado"
+            if future_days:
+                source += f" · incluye {future_days} día(s) de proyección"
+        details.append([f"{monday:%d/%m}–{sunday:%d/%m}", coverage, available, source])
+    return go.Bar(
+        x=dates, y=totals, width=widths, offset=offsets,
+        name=trace.name if historical else "Flujo semanal del gemelo",
+        marker=dict(color=trace.marker.color, pattern_shape=patterns),
+        opacity=trace.opacity,
+        customdata=details,
+        hovertemplate=(
+            "Semana %{customdata[0]}<br>Flujo: %{y:.2f} % del total<br>"
+            "%{customdata[1]}<br>%{customdata[2]}<br>%{customdata[3]}<extra>%{fullData.name}</extra>"
+        ),
+    )
+
+
 def trajectory_charts(
     df,
     observations,
@@ -54,7 +103,10 @@ def trajectory_charts(
     lower_thermal_time=600.0,
     upper_thermal_time=800.0,
     seasonal_reference=None,
+    flow_frequency="Diario",
 ):
+    if flow_frequency not in ("Diario", "Semanal"):
+        raise ValueError("La frecuencia del flujo debe ser Diario o Semanal.")
     cutoff = pd.Timestamp(as_of).normalize()
     year_start = pd.Timestamp(cutoff.year, 1, 1)
     display_end = pd.Timestamp(cutoff.year, 10, 1)
@@ -112,6 +164,14 @@ def trajectory_charts(
                            "Total estacional estimado<extra></extra>"),
         ),
     )
+    if flow_frequency == "Semanal":
+        daily_figure = go.Figure([
+            _weekly_flow_trace(
+                trace, cutoff, year_start, display_end,
+                historical=trace.name == "Flujo histórico · orientativo",
+            )
+            for trace in daily_figure.data
+        ])
     cumulative_figure.add_trace(
         go.Scatter(
             x=df["Fecha"],
@@ -252,7 +312,7 @@ def trajectory_charts(
             barmode="overlay",
         )
     daily_figure.update_yaxes(
-        title_text="Flujo diario (% del total)",
+        title_text=f"Flujo {flow_frequency.lower()} (% del total)",
         ticksuffix=" %", rangemode="tozero",
     )
     cumulative_figure.update_yaxes(title_text="Emergencia acumulada (%)", range=[0, 105])
