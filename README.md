@@ -179,8 +179,8 @@ diario, el máximo individual de una campaña ni el flujo histórico de esa mism
 
 `Índice = flujo previsto en los próximos 7 días / máximo semanal histórico`.
 
-- **🔴 Alta:** índice mayor que 0,50 (más del 50 % del máximo).
-- **🟠 Media:** índice entre 0,25 y 0,50 inclusive.
+- **🔴 Alta:** índice mayor que 0,75 (más del 75 % del máximo).
+- **🟠 Media:** índice entre 0,25 y 0,75 inclusive.
 - **🟡 Baja:** flujo positivo e índice menor que 0,25 (menos del 25 % del máximo).
 - **🟢 Nula:** flujo semanal exactamente igual a cero, con siete días válidos.
 
@@ -190,7 +190,7 @@ las mismas denominaciones y colores. El color se acompaña siempre con texto.
 
 Ejemplo ilustrativo: si el máximo histórico es 20 % del total por semana y el
 flujo previsto es 12 % del total en los próximos siete días, el índice es 60 %:
-intensidad Alta. Un flujo previsto exactamente igual a cero, con siete días válidos,
+intensidad Media. Un flujo previsto exactamente igual a cero, con siete días válidos,
 corresponde a Nula. Los flujos positivos pequeños siguen siendo Baja aunque el
 porcentaje redondeado mostrado sea 0,0 %; el redondeo no determina la categoría.
 El índice puede superar el 100 %; no es una probabilidad ni un umbral de daño económico.

@@ -43,7 +43,7 @@ def _intensity(ratio: float) -> str:
     # Tolera únicamente el redondeo numérico en los límites inclusivos.
     if ratio < 0.25 and not np.isclose(ratio, 0.25, rtol=0, atol=1e-12):
         return "Baja"
-    if ratio <= 0.50 or np.isclose(ratio, 0.50, rtol=0, atol=1e-12):
+    if ratio <= 0.75 or np.isclose(ratio, 0.75, rtol=0, atol=1e-12):
         return "Media"
     return "Alta"
 
