@@ -350,7 +350,7 @@ metric_columns[2].metric(
         "Suma del flujo previsto desde mañana hasta siete días después, dividida por "
         "el máximo semanal del pool histórico (semanas completas de lunes a domingo). "
         "Nula (verde): flujo semanal igual a cero; Baja (amarillo): flujo positivo "
-        "menor al 10 % del máximo; Media (naranja): del 10 al 50 % inclusive; "
+        "menor al 25 % del máximo; Media (naranja): del 25 al 50 % inclusive; "
         "Alta (rojo): más del 50 %. Sin datos suficientes se muestra gris. "
         "Es una intensidad relativa de emergencia, no una probabilidad."
     ),
@@ -366,8 +366,8 @@ if snapshot["intensity_7d_ratio"] is not None:
 else:
     st.caption("Intensidad de emergencia: " + snapshot["intensity_7d_reason"])
 st.caption(
-    "🔴 Alta: >50 % del máximo histórico · 🟠 Media: 10–50 % · "
-    "🟡 Baja: >0 y <10 % · 🟢 Nula: flujo semanal = 0."
+    "🔴 Alta: >50 % del máximo histórico · 🟠 Media: 25–50 % · "
+    "🟡 Baja: >0 y <25 % · 🟢 Nula: flujo semanal = 0."
 )
 
 tab_state, tab_observations, tab_calibration, tab_scenarios, tab_audit = st.tabs(

@@ -36,8 +36,8 @@ def forecast(total=.12, cutoff=CUTOFF):
 
 
 @pytest.mark.parametrize("ratio,level", [
-    (0., "Nula"), (1e-10, "Baja"), (.099999, "Baja"), (.10, "Media"),
-    (.100001, "Media"), (.499999, "Media"), (.50, "Media"),
+    (0., "Nula"), (1e-10, "Baja"), (.10, "Baja"), (.249999, "Baja"), (.25, "Media"),
+    (.250001, "Media"), (.499999, "Media"), (.50, "Media"),
     (.500001, "Alta"), (.9, "Alta"), (1.3, "Alta"),
 ])
 def test_intensity_thresholds_and_future_flow_sum(reference, ratio, level):

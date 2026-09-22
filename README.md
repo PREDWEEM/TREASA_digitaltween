@@ -180,8 +180,8 @@ diario, el máximo individual de una campaña ni el flujo histórico de esa mism
 `Índice = flujo previsto en los próximos 7 días / máximo semanal histórico`.
 
 - **🔴 Alta:** índice mayor que 0,50 (más del 50 % del máximo).
-- **🟠 Media:** índice entre 0,10 y 0,50 inclusive.
-- **🟡 Baja:** flujo positivo e índice menor que 0,10 (menos del 10 % del máximo).
+- **🟠 Media:** índice entre 0,25 y 0,50 inclusive.
+- **🟡 Baja:** flujo positivo e índice menor que 0,25 (menos del 25 % del máximo).
 - **🟢 Nula:** flujo semanal exactamente igual a cero, con siete días válidos.
 
 El indicador principal muestra la luz del semáforo junto al nombre de la intensidad,
