@@ -166,11 +166,11 @@ El calendario posterior al final del eje histórico se marca **«Sin referencia
 disponible»**: no se agregan ceros ni se extiende el acumulado al resto del año.
 La leyenda bajo el gráfico separa el remanente histórico orientativo del remanente
 estimado por el gemelo. El fondo no extiende la meteorología ni la trayectoria:
-el mismo pool se utiliza como referencia del riesgo semanal descrito abajo.
+el mismo pool se utiliza como referencia de la intensidad semanal descrita abajo.
 
-### Riesgo relativo al máximo semanal histórico
+### Intensidad de emergencia y semáforo
 
-El riesgo compara **la suma del flujo diario del gemelo de t+1 a t+7** con
+La intensidad de emergencia compara **la suma del flujo diario del gemelo de t+1 a t+7** con
 **el máximo semanal del pool histórico local disponible en la fecha de consulta**.
 El denominador usa el mismo resumen histórico del gráfico, trasladado al calendario
 consultado y agregado de lunes a domingo, dentro del 1 de enero al 1 de octubre.
@@ -179,13 +179,20 @@ diario, el máximo individual de una campaña ni el flujo histórico de esa mism
 
 `Índice = flujo previsto en los próximos 7 días / máximo semanal histórico`.
 
-- **Bajo:** índice menor que 0,10 (menos del 10 % del máximo).
-- **Medio:** índice entre 0,10 y 0,50 inclusive.
-- **Alto:** índice mayor que 0,50.
+- **🔴 Alta:** índice mayor que 0,50 (más del 50 % del máximo).
+- **🟠 Media:** índice entre 0,10 y 0,50 inclusive.
+- **🟡 Baja:** flujo positivo e índice menor que 0,10 (menos del 10 % del máximo).
+- **🟢 Nula:** flujo semanal exactamente igual a cero, con siete días válidos.
+
+El indicador principal muestra la luz del semáforo junto al nombre de la intensidad,
+el horizonte de siete días y el porcentaje del máximo histórico. Los escenarios usan
+las mismas denominaciones y colores. El color se acompaña siempre con texto.
 
 Ejemplo ilustrativo: si el máximo histórico es 20 % del total por semana y el
 flujo previsto es 12 % del total en los próximos siete días, el índice es 60 %:
-riesgo Alto. Un flujo previsto de cero, con siete días válidos, corresponde a Bajo.
+intensidad Alta. Un flujo previsto exactamente igual a cero, con siete días válidos,
+corresponde a Nula. Los flujos positivos pequeños siguen siendo Baja aunque el
+porcentaje redondeado mostrado sea 0,0 %; el redondeo no determina la categoría.
 El índice puede superar el 100 %; no es una probabilidad ni un umbral de daño económico.
 
 Ambos flujos se comparan en la misma escala fraccional (o ambos en porcentaje),
@@ -195,12 +202,15 @@ de campañas: 2025 solamente antes del 16/09/2026; pool 2025–2026 desde esa fe
 
 El horizonte futuro es móvil desde la fecha elegida, por lo que puede abarcar
 partes de dos barras de semanas calendario. El selector Diario/Semanal no cambia
-el riesgo. Se exige el flujo de las siete fechas consecutivas; datos ausentes,
+la intensidad. Se exige el flujo de las siete fechas consecutivas; datos ausentes,
 inválidos o duplicados no se rellenan con cero. Sin los siete días se informa
-«Sin pronóstico» o «Pronóstico incompleto», sin asignar Bajo/Medio/Alto.
-Sin un máximo histórico positivo se indica «Sin referencia». La regla también
+«Sin pronóstico» o «Pronóstico incompleto», con luz gris, sin asignar intensidad.
+Para un flujo positivo sin máximo histórico válido se indica «Sin referencia»
+en gris. Con siete flujos válidos iguales a cero, la intensidad es Nula aunque
+no haya referencia histórica; no se calcula un cociente con denominador cero.
+La regla también
 se aplica al acercarse al cierre meteorológico del 1 de octubre.
-El indicador, los escenarios y el estado exportado conservan el cociente,
+El indicador, los escenarios y el estado exportado (`intensity_7d`) conservan el cociente,
 el flujo previsto, el máximo de referencia y la cantidad de días disponibles.
 
 La vista admite el calendario de 2027 (y conserva mes/día en años bisiestos),

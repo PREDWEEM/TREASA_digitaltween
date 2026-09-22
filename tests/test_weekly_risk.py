@@ -1,4 +1,4 @@
-"""Riesgo por flujo futuro frente al pico del pool, con horizonte completo."""
+"""Intensidad por flujo futuro frente al pico del pool, con horizonte completo."""
 
 from pathlib import Path
 
@@ -9,7 +9,7 @@ import pytest
 from predweem_twin.charts import trajectory_charts
 from predweem_twin.flows import historical_weekly_max
 from predweem_twin.seasonal import load_local_seasonal_reference
-from predweem_twin.state import build_twin_snapshot, weekly_flow_risk
+from predweem_twin.state import build_twin_snapshot, weekly_flow_intensity
 
 
 ROOT = Path(__file__).parents[1]
@@ -23,7 +23,7 @@ def reference():
 
 def forecast(total=.12, cutoff=CUTOFF):
     dates = pd.date_range(cutoff, periods=10)
-    # Hoy y los días posteriores al horizonte no deben influir en el riesgo.
+    # Hoy y los días posteriores al horizonte no deben influir en la intensidad.
     flows = np.array([.9, *([total / 7] * 7), .8, .8])
     return pd.DataFrame({
         "Fecha": dates,
@@ -36,19 +36,19 @@ def forecast(total=.12, cutoff=CUTOFF):
 
 
 @pytest.mark.parametrize("ratio,level", [
-    (0., "Bajo"), (.099999, "Bajo"), (.10, "Medio"),
-    (.100001, "Medio"), (.499999, "Medio"), (.50, "Medio"),
-    (.500001, "Alto"), (.9, "Alto"), (1.3, "Alto"),
+    (0., "Nula"), (1e-10, "Baja"), (.099999, "Baja"), (.10, "Media"),
+    (.100001, "Media"), (.499999, "Media"), (.50, "Media"),
+    (.500001, "Alta"), (.9, "Alta"), (1.3, "Alta"),
 ])
-def test_risk_thresholds_and_future_flow_sum(reference, ratio, level):
+def test_intensity_thresholds_and_future_flow_sum(reference, ratio, level):
     peak = historical_weekly_max(reference, CUTOFF)
     frame = forecast(peak * ratio)
     # El indicador debe analizar los flujos, sin clasificar el acumulado absoluto.
     frame["EMERAC_TWIN"] = .98
     snapshot = build_twin_snapshot(frame, "test", CUTOFF, "test", seasonal_reference=reference)
     assert snapshot["increment_7d"] == pytest.approx(peak * ratio)
-    assert snapshot["risk_7d_ratio"] == pytest.approx(ratio)
-    assert snapshot["risk_7d"] == level
+    assert snapshot["intensity_7d_ratio"] == pytest.approx(ratio)
+    assert snapshot["intensity_7d"] == level
     assert snapshot["forecast_days_7d"] == 7
 
 
@@ -63,18 +63,18 @@ def test_peak_matches_complete_historical_bars_and_available_pool(cutoff):
     historical = weekly.data[0]
     complete = [float(value) / 100 for value, pattern in zip(historical.y, historical.marker.pattern.shape) if pattern == ""]
     assert historical_weekly_max(reference, cutoff) == pytest.approx(max(complete))
-    result = weekly_flow_risk(frame, cutoff, reference)
-    assert result["risk_7d_ratio"] == pytest.approx(.12 / max(complete))
+    result = weekly_flow_intensity(frame, cutoff, reference)
+    assert result["intensity_7d_ratio"] == pytest.approx(.12 / max(complete))
 
 
 @pytest.mark.parametrize("days", [0, 3, 6])
 def test_partial_horizon_is_not_classified_as_low(reference, days):
-    frame = forecast().iloc[:days + 1]
-    result = weekly_flow_risk(frame, CUTOFF, reference)
-    assert result["risk_7d"] == ("Sin pronóstico" if days == 0 else "Pronóstico incompleto")
+    frame = forecast(total=0.).iloc[:days + 1]
+    result = weekly_flow_intensity(frame, CUTOFF, reference)
+    assert result["intensity_7d"] == ("Sin pronóstico" if days == 0 else "Pronóstico incompleto")
     assert result["forecast_days_7d"] == days
     assert result["increment_7d"] is None
-    assert result["risk_7d_ratio"] is None
+    assert result["intensity_7d_ratio"] is None
 
 
 @pytest.mark.parametrize("fault", ["missing", "duplicate", "nan", "infinite", "negative"])
@@ -86,10 +86,10 @@ def test_seven_calendar_days_must_be_valid_without_using_later_rows(reference, f
         frame = pd.concat([frame, frame.iloc[[3]]], ignore_index=True)
     else:
         frame.loc[3, "EMERREL_TWIN"] = {"nan": np.nan, "infinite": np.inf, "negative": -.01}[fault]
-    result = weekly_flow_risk(frame, CUTOFF, reference)
+    result = weekly_flow_intensity(frame, CUTOFF, reference)
     assert result["forecast_days_7d"] == 6
-    assert result["risk_7d"] == "Pronóstico incompleto"
-    assert result["risk_7d_ratio"] is None
+    assert result["intensity_7d"] == "Pronóstico incompleto"
+    assert result["intensity_7d_ratio"] is None
 
 
 def test_partial_historical_weeks_cannot_set_the_peak():
@@ -103,14 +103,22 @@ def test_partial_historical_weeks_cannot_set_the_peak():
 
 
 @pytest.mark.parametrize("mode", ["missing", "zero"])
-def test_missing_or_zero_historical_peak_is_not_a_low_risk(reference, mode):
+def test_missing_or_zero_historical_peak_is_not_a_low_intensity(reference, mode):
     if mode == "missing":
         reference = None
     else:
         reference = reference.copy()
         reference["Progreso_Mediano"] = 0.
-    result = weekly_flow_risk(forecast(), CUTOFF, reference)
+    result = weekly_flow_intensity(forecast(), CUTOFF, reference)
     assert result["increment_7d"] == pytest.approx(.12)
     assert result["historical_weekly_max"] is None
-    assert result["risk_7d"] == "Sin referencia"
-    assert result["risk_7d_ratio"] is None
+    assert result["intensity_7d"] == "Sin referencia"
+    assert result["intensity_7d_ratio"] is None
+
+
+def test_complete_zero_flow_is_null_even_without_historical_peak():
+    result = weekly_flow_intensity(forecast(total=0.), CUTOFF, None)
+    assert result["forecast_days_7d"] == 7
+    assert result["increment_7d"] == 0.
+    assert result["intensity_7d"] == "Nula"
+    assert result["intensity_7d_ratio"] is None

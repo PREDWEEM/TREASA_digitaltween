@@ -1,4 +1,4 @@
-"""Flujos históricos compartidos por los gráficos y el riesgo semanal."""
+"""Flujos históricos compartidos por los gráficos y la intensidad semanal."""
 
 from __future__ import annotations
 
