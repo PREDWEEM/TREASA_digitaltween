@@ -356,7 +356,23 @@ metric_columns[2].metric(
     ),
 )
 metric_columns[3].metric("Agua superficial", f'{snapshot["soil_water"]:.1f} mm', f'{snapshot["soil_water_fraction"]:.0%} Wmax')
-metric_columns[4].metric("TT desde primer pico", f'{snapshot["thermal_time"]:.0f} °Cd', f'{parameters.tt_limite:.0f} °Cd límite')
+thermal_lights = {
+    "FUERA DE CONTROL": "🔴", "ULTIMO PLAZO": "🟠",
+    "CONTROL A TIEMPO": "🟡", "AUN NO CONTROLAR": "🟢",
+}
+thermal_stage = snapshot["thermal_control_stage"]
+metric_columns[4].metric(
+    "TT desde primer pico",
+    f'{snapshot["thermal_time"]:.1f} °Cd' if np.isfinite(snapshot["thermal_time"]) else "—",
+    f'{thermal_lights.get(thermal_stage, "⚪")} {thermal_stage}',
+    delta_color="off",
+    help=(
+        "Semáforo del tiempo térmico desde el primer pico: "
+        "🔴 FUERA DE CONTROL: >800 °Cd; 🟠 ULTIMO PLAZO: >700 y ≤800 °Cd; "
+        "🟡 CONTROL A TIEMPO: ≥600 y ≤700 °Cd; 🟢 AUN NO CONTROLAR: <600 °Cd. "
+        "La categoría se calcula con el TT sin redondear."
+    ),
+)
 if snapshot["intensity_7d_ratio"] is not None:
     st.caption(
         f'Intensidad de emergencia: flujo previsto {snapshot["increment_7d"]:.2%} del total estacional '
@@ -368,6 +384,11 @@ else:
 st.caption(
     "🔴 Alta: >75 % del máximo histórico · 🟠 Media: 25–75 % · "
     "🟡 Baja: >0 y <25 % · 🟢 Nula: flujo semanal = 0."
+)
+st.caption(
+    "TT desde primer pico: 🔴 FUERA DE CONTROL: >800 °Cd · "
+    "🟠 ULTIMO PLAZO: >700 y ≤800 °Cd · 🟡 CONTROL A TIEMPO: ≥600 y ≤700 °Cd · "
+    "🟢 AUN NO CONTROLAR: <600 °Cd."
 )
 
 tab_state, tab_observations, tab_calibration, tab_scenarios, tab_audit = st.tabs(

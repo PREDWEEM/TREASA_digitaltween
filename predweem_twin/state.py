@@ -25,6 +25,7 @@ class TwinSnapshot:
     soil_water: float
     soil_water_fraction: float
     thermal_time: float
+    thermal_control_stage: str
     thermoinhibited: bool
     cohort_exhausted: bool
     next_cohort_start: str | None
@@ -35,6 +36,19 @@ class TwinSnapshot:
     seasonal_potential_plm2: float | None
     last_observation_date: str | None
     assimilation_mode: str
+
+
+def thermal_control_stage(thermal_time: float) -> str:
+    """Clasifica el TT desde el primer pico, sin redondear sus límites."""
+    if not np.isfinite(thermal_time):
+        return "SIN DATOS"
+    if thermal_time < 600:
+        return "AUN NO CONTROLAR"
+    if thermal_time <= 700:
+        return "CONTROL A TIEMPO"
+    if thermal_time <= 800:
+        return "ULTIMO PLAZO"
+    return "FUERA DE CONTROL"
 
 
 def _intensity(ratio: float) -> str:
@@ -162,6 +176,7 @@ def build_twin_snapshot(
         soil_water=float(df.at[idx, "W_superficial"]),
         soil_water_fraction=float(df.at[idx, "Humedad_Relativa"]),
         thermal_time=float(df.at[idx, "TT_DESDE_PICO"]),
+        thermal_control_stage=thermal_control_stage(float(df.at[idx, "TT_DESDE_PICO"])),
         thermoinhibited=bool(df.at[idx, "Termoinhibida"]),
         cohort_exhausted=(
             bool(df.at[idx, "Cohorte_Agotada"])

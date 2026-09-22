@@ -81,6 +81,19 @@ Desde el 15/04 aplica un techo del 50 % del máximo previo, con decaimiento
 τ=60 días, β=1 e intensidad 0,75. Se conserva el reloj térmico triangular
 2–20–30 °C y la banda de manejo 600–800 °Cd.
 
+El indicador **TT desde primer pico** muestra el tiempo térmico y un semáforo:
+
+- **🔴 FUERA DE CONTROL:** TT >800 °Cd.
+- **🟠 ULTIMO PLAZO:** TT >700 y ≤800 °Cd.
+- **🟡 CONTROL A TIEMPO:** TT ≥600 y ≤700 °Cd.
+- **🟢 AUN NO CONTROLAR:** TT <600 °Cd.
+
+Los valores exactos de 600 y 700 °Cd corresponden a CONTROL A TIEMPO; 800 °Cd
+corresponde a ULTIMO PLAZO. La clasificación utiliza el TT sin redondear, aunque
+el indicador lo presenta con un decimal. Si el TT no es válido, muestra SIN DATOS
+en gris. La categoría se conserva en el estado como `thermal_control_stage`.
+Este semáforo utiliza el reloj térmico existente y no modifica su cálculo.
+
 Las coordenadas del modelo son −38,4500, −60,2763; ET0 conserva la latitud
 del motor original. La fuente meteorológica operativa corresponde a INTA
 Barrow, −38,388, −60,346. Ambas ubicaciones se documentan por separado.
