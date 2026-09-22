@@ -2,48 +2,11 @@
 
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
+from .flows import annual_historical_reference, weekly_flow_groups
 from .state import thermal_window_dates
-
-
-def annual_historical_reference(reference, as_of):
-    """Traslada el pool al calendario consultado sin inventar una cola anual.
-
-    Las referencias locales proceden de 2025 y 2026 (años no bisiestos).
-    En un año bisiesto se conserva mes/día y se interpola el 29 de febrero.
-    Fuera del eje histórico se deja NaN, no un supuesto de emergencia nula.
-    El flujo diario es derivado del acumulado, no un conteo diario observado.
-    """
-    year = pd.Timestamp(as_of).year
-    dates = pd.date_range(f"{year}-01-01", f"{year}-12-31")
-    frame = pd.DataFrame({"Fecha": dates})
-    days = dates.dayofyear.to_numpy(dtype=float)
-    days[(dates.is_leap_year) & (dates.month > 2)] -= 1
-    days[(dates.month == 2) & (dates.day == 29)] = 59.5
-    axis = reference["Julian_days"].to_numpy(float)
-    columns = ["Progreso_Mediano"] + [
-        column for column in ("Progreso_2025", "Progreso_2026")
-        if column in reference
-    ]
-    for column in columns:
-        frame[column] = np.interp(
-            days, axis, reference[column].to_numpy(float),
-            left=np.nan, right=np.nan,
-        )
-    # El resumen operativo conserva su supuesto de normalización hasta el
-    # final del eje; la curva individual 2026 muestra sólo su ventana real.
-    source_2026 = reference.attrs.get("source_2026", {})
-    if "Progreso_2026" in frame and source_2026.get("end"):
-        end_day = pd.Timestamp(source_2026["end"]).dayofyear
-        frame.loc[days > end_day, "Progreso_2026"] = np.nan
-    frame["Flujo_Diario"] = frame["Progreso_Mediano"].diff().clip(lower=0)
-    if axis[0] == 1:
-        frame.loc[0, "Flujo_Diario"] = frame.loc[0, "Progreso_Mediano"]
-    frame.attrs["campaigns"] = reference["Campanas_Anos"].iloc[0]
-    return frame
 
 
 def _weekly_flow_trace(trace, cutoff, year_start, display_end, historical=False):
@@ -53,10 +16,8 @@ def _weekly_flow_trace(trace, cutoff, year_start, display_end, historical=False)
     Las barras comparten semanas, sin extenderse más allá de las fechas con
     datos. El rayado identifica semanas con menos de siete días.
     """
-    frame = pd.DataFrame({"Fecha": pd.to_datetime(trace.x), "Flujo": trace.y})
-    frame["Semana"] = frame["Fecha"] - pd.to_timedelta(frame["Fecha"].dt.dayofweek, unit="D")
     dates, totals, widths, offsets, details, patterns = [], [], [], [], [], []
-    for monday, group in frame.groupby("Semana", sort=True):
+    for monday, group in weekly_flow_groups(trace.x, trace.y):
         sunday = monday + pd.Timedelta(days=6)
         start = max(monday, year_start)
         end = min(sunday, display_end)

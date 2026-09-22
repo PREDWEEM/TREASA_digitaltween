@@ -265,6 +265,7 @@ snapshot = build_twin_snapshot(
     as_of,
     source_label,
     len(assimilation_audit),
+    seasonal_reference=seasonal_reference,
 )
 snapshot["calibration"] = calibration_audit
 milestones = milestone_dates(twin_trajectory)
@@ -316,8 +317,8 @@ else:
     )
 if not forecast_metadata["complete"]:
     st.warning(
-        "El horizonte meteorológico está incompleto. Los indicadores futuros "
-        "se calculan solamente con los días disponibles."
+        "El horizonte meteorológico está incompleto. La proyección muestra los días "
+        "disponibles; el riesgo semanal requiere siete días completos."
     )
 if snapshot["last_observation_date"]:
     st.caption(
@@ -336,9 +337,30 @@ if coverage_series_for_model is not None:
 metric_columns = st.columns(5)
 metric_columns[0].metric("Emergencia estimada", f'{snapshot["emergence"]:.0%}')
 metric_columns[1].metric("Emergencia remanente", f'{snapshot["remaining"]:.0%}')
-metric_columns[2].metric("Riesgo próximos 7 días", snapshot["risk_7d"], f'+{snapshot["increment_7d"]:.1%}')
+metric_columns[2].metric(
+    "Riesgo próximos 7 días", snapshot["risk_7d"],
+    (f'{snapshot["risk_7d_ratio"]:.1%} del máximo histórico'
+     if snapshot["risk_7d_ratio"] is not None
+     else f'{snapshot["forecast_days_7d"]}/7 días disponibles'),
+    delta_color="off",
+    help=(
+        "Suma del flujo previsto desde mañana hasta siete días después, dividida por "
+        "el máximo semanal del pool histórico (semanas completas de lunes a domingo). "
+        "Bajo: menos del 10 %; Medio: del 10 al 50 % inclusive; Alto: más del 50 %. "
+        "Es una intensidad relativa de emergencia, no una probabilidad."
+    ),
+)
 metric_columns[3].metric("Agua superficial", f'{snapshot["soil_water"]:.1f} mm', f'{snapshot["soil_water_fraction"]:.0%} Wmax')
 metric_columns[4].metric("TT desde primer pico", f'{snapshot["thermal_time"]:.0f} °Cd', f'{parameters.tt_limite:.0f} °Cd límite')
+if snapshot["risk_7d_ratio"] is not None:
+    st.caption(
+        f'Riesgo semanal: flujo previsto {snapshot["increment_7d"]:.2%} del total estacional '
+        f'/ máximo semanal histórico {snapshot["historical_weekly_max"]:.2%} del total histórico '
+        f'= {snapshot["risk_7d_ratio"]:.1%} del máximo · 7/7 días. '
+        "Bajo <10 % · Medio 10–50 % · Alto >50 %."
+    )
+else:
+    st.caption("Riesgo semanal: " + snapshot["risk_7d_reason"])
 
 tab_state, tab_observations, tab_calibration, tab_scenarios, tab_audit = st.tabs(
     ["Estado del lote", "Observaciones", "Calibración por sitio", "Escenarios", "Trazabilidad"]
@@ -892,18 +914,23 @@ with tab_scenarios:
         seasonal_potential_prior=seasonal_potential_prior,
     )
     scenario_snapshot = build_twin_snapshot(
-        scenario_twin, site_id, as_of, "Escenario", len(assimilation_audit)
+        scenario_twin, site_id, as_of, "Escenario", len(assimilation_audit),
+        seasonal_reference=seasonal_reference,
     )
     scenario_milestones = milestone_dates(scenario_twin)
     comparison = pd.DataFrame(
         {
-            "Indicador": ["Incremento próximos 7 días", "Riesgo", "d50", "d75", "d95"],
+            "Indicador": ["Flujo próximos 7 días (% del total)", "Flujo / máximo semanal histórico", "Riesgo", "d50", "d75", "d95"],
             "Escenario base": [
-                f'{snapshot["increment_7d"]:.1%}', snapshot["risk_7d"],
+                (f'{snapshot["increment_7d"]:.2%}' if snapshot["increment_7d"] is not None else "No evaluable"),
+                (f'{snapshot["risk_7d_ratio"]:.1%}' if snapshot["risk_7d_ratio"] is not None else "No evaluable"),
+                snapshot["risk_7d"],
                 milestones["d50"], milestones["d75"], milestones["d95"],
             ],
             "Escenario simulado": [
-                f'{scenario_snapshot["increment_7d"]:.1%}', scenario_snapshot["risk_7d"],
+                (f'{scenario_snapshot["increment_7d"]:.2%}' if scenario_snapshot["increment_7d"] is not None else "No evaluable"),
+                (f'{scenario_snapshot["risk_7d_ratio"]:.1%}' if scenario_snapshot["risk_7d_ratio"] is not None else "No evaluable"),
+                scenario_snapshot["risk_7d"],
                 scenario_milestones["d50"], scenario_milestones["d75"], scenario_milestones["d95"],
             ],
         }

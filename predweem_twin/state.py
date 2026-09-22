@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 
+import numpy as np
 import pandas as pd
+
+from .flows import historical_weekly_max
 
 
 @dataclass(frozen=True)
@@ -14,7 +17,11 @@ class TwinSnapshot:
     emergence: float
     remaining: float
     risk_7d: str
-    increment_7d: float
+    increment_7d: float | None
+    historical_weekly_max: float | None
+    risk_7d_ratio: float | None
+    forecast_days_7d: int
+    risk_7d_reason: str
     soil_water: float
     soil_water_fraction: float
     thermal_time: float
@@ -30,14 +37,58 @@ class TwinSnapshot:
     assimilation_mode: str
 
 
-def _risk(increment: float) -> str:
-    if increment <= 0.01:
-        return "Nulo"
-    if increment <= 0.05:
+def _risk(ratio: float) -> str:
+    # Tolera únicamente el redondeo numérico en los límites inclusivos.
+    if ratio < 0.10 and not np.isclose(ratio, 0.10, rtol=0, atol=1e-12):
         return "Bajo"
-    if increment <= 0.15:
+    if ratio <= 0.50 or np.isclose(ratio, 0.50, rtol=0, atol=1e-12):
         return "Medio"
     return "Alto"
+
+
+def weekly_flow_risk(trajectory, as_of, seasonal_reference=None) -> dict:
+    """Compara el flujo de t+1 a t+7 con el pico semanal del pool histórico.
+
+    Ambos flujos son fracciones de sus respectivos totales estacionales.
+    Se requieren siete fechas consecutivas con flujo válido y un pico positivo.
+    Un día ausente, duplicado o inválido no se interpreta como flujo cero.
+    """
+    cutoff = pd.Timestamp(as_of).tz_localize(None).normalize()
+    dates = pd.to_datetime(trajectory["Fecha"]).dt.tz_localize(None).dt.normalize()
+    flows = pd.to_numeric(trajectory["EMERREL_TWIN"], errors="coerce")
+    daily = pd.Series(flows.to_numpy(), index=dates)
+    daily = daily.where(np.isfinite(daily) & daily.ge(0))
+    # Un duplicado hace que esa fecha no sea evaluable, sin sumar dos veces.
+    daily = daily.loc[~daily.index.duplicated(keep=False)]
+    horizon = pd.date_range(cutoff + pd.Timedelta(days=1), periods=7)
+    future = daily.reindex(horizon)
+    available = int(future.notna().sum())
+    peak = historical_weekly_max(seasonal_reference, cutoff)
+    result = {
+        "risk_7d": "Sin pronóstico" if available == 0 else "Pronóstico incompleto",
+        "increment_7d": None,
+        "historical_weekly_max": peak,
+        "risk_7d_ratio": None,
+        "forecast_days_7d": available,
+        "risk_7d_reason": f"Flujo previsto disponible para {available}/7 días; no se asigna nivel de riesgo.",
+    }
+    if available < 7:
+        return result
+    total = float(future.sum())
+    result["increment_7d"] = total
+    if peak is None:
+        result.update(
+            risk_7d="Sin referencia",
+            risk_7d_reason="No hay un máximo semanal histórico positivo con siete días válidos.",
+        )
+        return result
+    ratio = total / peak
+    result.update(
+        risk_7d=_risk(ratio),
+        risk_7d_ratio=ratio,
+        risk_7d_reason="Flujo previsto en siete días / máximo de semanas completas del pool histórico.",
+    )
+    return result
 
 
 def _next_cohort(df: pd.DataFrame, idx: int, threshold: float = 0.01):
@@ -60,15 +111,14 @@ def build_twin_snapshot(
     as_of,
     weather_source: str,
     assimilated_observations: int = 0,
+    seasonal_reference: pd.DataFrame | None = None,
 ) -> dict:
     as_of = pd.Timestamp(as_of).tz_localize(None).normalize()
     df = trajectory.sort_values("Fecha").reset_index(drop=True)
     candidates = df.index[df["Fecha"] <= as_of].tolist()
     idx = candidates[-1] if candidates else 0
-    future_idx = min(idx + 7, len(df) - 1)
     current = float(df.at[idx, "EMERAC_TWIN"])
-    future = float(df.at[future_idx, "EMERAC_TWIN"])
-    increment = max(0.0, future - current)
+    risk = weekly_flow_risk(df, as_of, seasonal_reference)
     start, end = _next_cohort(df, idx)
     potential_value = (
         float(df.at[idx, "POTENCIAL_ESTACIONAL_PLM2"])
@@ -98,8 +148,7 @@ def build_twin_snapshot(
         as_of=df.at[idx, "Fecha"].date().isoformat(),
         emergence=current,
         remaining=max(0.0, 1.0 - current),
-        risk_7d=_risk(increment),
-        increment_7d=increment,
+        **risk,
         soil_water=float(df.at[idx, "W_superficial"]),
         soil_water_fraction=float(df.at[idx, "Humedad_Relativa"]),
         thermal_time=float(df.at[idx, "TT_DESDE_PICO"]),
