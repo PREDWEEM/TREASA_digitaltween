@@ -299,7 +299,7 @@ st.caption(
     "preliminares con tan pocos años; no son intervalos de confianza. "
     "Balcarce y San Pedro están excluidos explícitamente."
 )
-if reference_campaigns > 1:
+if seasonal_reference.attrs["source_2026"]["used"]:
     st.caption(
         f"La referencia 2026 usa el total registrado del 05/02 al {reference_2026_from:%d/%m/%Y}. "
         "Se interpola el acumulado entre visitas. No se conocen nacimientos anteriores "
@@ -313,7 +313,13 @@ if reference_campaigns > 1:
 else:
     st.caption(
         f"La referencia 2026 se habilita desde el {reference_2026_from:%d/%m/%Y}. "
-        "Para este corte se utiliza únicamente 2025."
+        f"Para este corte se utiliza el pool {reference_years}."
+    )
+if seasonal_reference.attrs["source_2023"]["used"]:
+    st.caption(
+        "2023: 29 visitas del 27/02 al 09/10, cinco réplicas y promedio verificado; "
+        "total registrado 2.658,8 plantas/m². Antes del 27/02 su trayectoria es desconocida. "
+        "La meteorología histórica conserva TMAX y TMIN faltantes el 17/06/2023."
     )
 if not forecast_metadata["complete"]:
     st.warning(
@@ -444,7 +450,9 @@ with tab_state:
             f"Ambas barras usan la misma escala: % del total por {'semana' if flow_frequency == 'Semanal' else 'día'} "
             "(2 % = +2 puntos porcentuales del acumulado). "
             "Histórico: total de las ventanas registradas; gemelo: total estacional estimado. "
-            "La interpolación entre visitas y la combinación de campañas suavizan los picos históricos."
+            "La interpolación entre visitas y la combinación de campañas suavizan los picos históricos. "
+            "El salto por incorporar una campaña sin cero inicial no se cuenta como flujo diario; "
+            "esa semana histórica queda parcial y no fija el máximo del semáforo."
         )
         if flow_frequency == "Semanal":
             st.caption(
@@ -979,17 +987,41 @@ with tab_audit:
     with st.expander("Curvas de la referencia local"):
         st.dataframe(seasonal_reference, hide_index=True, width="stretch")
         st.caption(
-            "Progreso entre 0 y 1. Antes del primer conteo de 2026, la mediana usa "
-            "sólo 2025. Al incorporar otra curva se conserva el avance previo "
-            "para evitar un retroceso del acumulado; los cuantiles originales "
-            "se muestran como Empirico. Después del último conteo, 2026 mantiene "
-            "el total de su ventana como supuesto de referencia; no son nuevas observaciones."
+            "Progreso entre 0 y 1. Se usan las campañas disponibles para cada día. "
+            "2023 comienza el 27/02 con 570 plantas/m² acumuladas; se conserva ese dato "
+            "sin inventar un inicio de intervalo ni un pico diario. "
+            "El ancla conserva su máximo acumulado para evitar retrocesos al cambiar "
+            "el número de curvas; los cuantiles originales figuran como Empirico. "
+            "Después del último conteo se mantiene el total como supuesto de referencia, "
+            "no como nuevas observaciones ni cierre biológico confirmado."
         )
         st.download_button(
             "Descargar referencia local utilizada (CSV)",
             seasonal_reference.to_csv(index=False).encode("utf-8"),
             "tres_arroyos_referencia_local.csv", "text/csv",
         )
+    with st.expander("Fuentes de Tres Arroyos 2023"):
+        reference_dir = BASE / "data/reference"
+        counts_2023 = pd.read_csv(reference_dir / "tres_arroyos_2023_counts.csv")
+        st.write("29 fechas · cinco réplicas · promedio en plantas/m² · 27/02–09/10/2023")
+        st.dataframe(counts_2023, hide_index=True, width="stretch")
+        st.caption(
+            "SD y EE describen la dispersión entre réplicas. El pool asigna igual peso "
+            "a cada campaña, sin ponderar por densidad, número de visitas o réplicas. "
+            "El total incluye también los conteos de octubre aunque el gráfico termine el 01/10."
+        )
+        st.caption(
+            "Meteorología asociada: 283 días, 01/01–10/10/2023. TMAX y TMIN del 17/06 "
+            "permanecen vacías. No se informó la estación. Este archivo se conserva "
+            "para análisis históricos; no reemplaza la meteorología operativa."
+        )
+        for filename, label in (
+            ("tres_arroyos_2023_counts.csv", "Descargar conteos y réplicas 2023"),
+            ("tres_arroyos_2023_weather.csv", "Descargar meteorología histórica 2023"),
+            ("tres_arroyos_2023_source.json", "Descargar procedencia 2023"),
+        ):
+            st.download_button(label, (reference_dir / filename).read_bytes(), filename,
+                               "application/json" if filename.endswith(".json") else "text/csv")
     st.write(calibration_audit["reason"])
     if calibration_audit["profile_id"]:
         st.caption(f'Perfil: {calibration_audit["profile_id"]}')

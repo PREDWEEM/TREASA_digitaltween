@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from hashlib import sha256
 import pickle
+import json
 
 import numpy as np
 import pandas as pd
@@ -79,79 +80,114 @@ def load_seasonal_reference(
     )
 
 
-def load_local_seasonal_reference(root: str | Path, as_of=None) -> pd.DataFrame:
-    """Combina Tres Arroyos 2025 con el período registrado de 2026.
-
-    El total 2026 sólo está disponible desde el último conteo. Antes de esa
-    fecha se utiliza exclusivamente 2025, también en evaluaciones temporales.
-    Se interpola el acumulado entre visitas, conservando la masa de cada
-    intervalo. No se atribuyen conteos diarios ni ceros anteriores al inicio.
-    Cada campaña disponible tiene igual peso, independientemente de su densidad.
-    """
-    root = Path(root)
-    reference = load_seasonal_reference(
-        root / "models/modelo_clusters_k3.pkl",
-        excluded_years=("2010", "2015"), include_patterns=("tresas",),
-    )
-    if (not reference["N_Campanas"].eq(1).all()
-            or not reference["Campanas"].eq("test -emerel tresas 2025.xlsx").all()):
-        raise ValueError("Se requiere una única referencia local de Tres Arroyos 2025.")
-
-    counts_path = root / "data/calibration/tres_arroyos_2026_counts.csv"
-    counts = pd.read_csv(counts_path)
+def _local_counts(root, year):
+    relative = (f"data/calibration/tres_arroyos_{year}_counts.csv" if year == 2026
+                else f"data/reference/tres_arroyos_{year}_counts.csv")
+    path = root / relative
+    counts = pd.read_csv(path)
     if not {"FECHA", "PLM2"}.issubset(counts.columns) or len(counts) < 2:
-        raise ValueError("La referencia 2026 requiere FECHA y PLM2 y al menos dos visitas.")
+        raise ValueError(f"La referencia {year} requiere FECHA y PLM2 y al menos dos visitas.")
     dates = pd.to_datetime(counts["FECHA"], errors="raise").dt.normalize()
     flows = pd.to_numeric(counts["PLM2"], errors="raise").to_numpy(float)
     if (dates.isna().any() or dates.duplicated().any()
-            or not dates.is_monotonic_increasing or not dates.dt.year.eq(2026).all()
+            or not dates.is_monotonic_increasing or not dates.dt.year.eq(year).all()
             or not np.isfinite(flows).all() or (flows < 0).any()
-            or flows.sum() <= 0 or flows[0] != 0):
-        raise ValueError("Conteos 2026 inválidos o sin cero inicial delimitador.")
-    available_from = dates.iloc[-1]
-    cutoff = pd.Timestamp(as_of).tz_localize(None).normalize() if as_of is not None else None
-    if cutoff is not None and pd.isna(cutoff):
-        raise ValueError("Fecha de corte de la referencia inválida.")
-    use_2026 = cutoff is None or cutoff >= available_from
-    reference["Progreso_2025"] = reference["Progreso_Mediano"]
-    reference["Campanas_Anos"] = "2025"
-    reference["N_Campanas_Dia"] = 1
-    reference["Referencia_2026_Desde"] = available_from.date().isoformat()
-    reference.attrs["source_2026"] = {
-        "path": "data/calibration/tres_arroyos_2026_counts.csv",
-        "sha256": sha256(counts_path.read_bytes()).hexdigest(),
-        "start": dates.iloc[0].date().isoformat(),
-        "end": available_from.date().isoformat(),
-        "sample_count": len(counts),
-        "window_total_plm2": float(flows.sum()),
-        "used": use_2026,
+            or flows.sum() <= 0 or (year == 2026 and flows[0] != 0)):
+        raise ValueError(f"Conteos {year} inválidos" + (" o sin cero inicial delimitador." if year == 2026 else "."))
+    metadata = {
+        "path": relative, "sha256": sha256(path.read_bytes()).hexdigest(),
+        "start": dates.iloc[0].date().isoformat(), "end": dates.iloc[-1].date().isoformat(),
+        "sample_count": len(counts), "window_total_plm2": float(flows.sum()),
+        "initial_zero_reference": bool(flows[0] == 0),
         "processing": "acumulado / total registrado; interpolación lineal entre visitas",
         "scope": "ventana registrada; no certifica el cierre biológico de la campaña",
     }
-    if not use_2026:
-        reference["Campanas_Excluidas"] += (
-            f", {counts_path.name} (disponible desde {available_from:%d/%m/%Y})"
-        )
-        return reference
+    if year == 2023:
+        source = json.loads((root / "data/reference/tres_arroyos_2023_source.json").read_text())
+        if (source.get("site") != "Tres Arroyos" or source.get("year") != 2023
+                or source["counts"]["sha256"] != metadata["sha256"]):
+            raise ValueError("La procedencia de Tres Arroyos 2023 no coincide con los conteos.")
+        replicas = counts[[f"REP{i}" for i in range(1, 6)]].to_numpy(float)
+        if (not np.isfinite(replicas).all() or (replicas < 0).any()
+                or not np.allclose(replicas.mean(axis=1), flows, rtol=0, atol=1e-9)):
+            raise ValueError("Las réplicas 2023 no coinciden con el promedio PLM2.")
+        metadata.update(replicate_count=5, first_interval_start=None,
+                        source_file="data/reference/tres_arroyos_2023_source.json",
+                        weather=source["weather"], incorporated_on=source["incorporated_on"])
+    return dates, flows, metadata
 
-    progress_2026 = np.cumsum(flows) / flows.sum()
-    reference["Progreso_2026"] = np.interp(
-        reference["Julian_days"], dates.dt.dayofyear, progress_2026,
-        left=np.nan, right=1.0,
+
+def load_local_seasonal_reference(root: str | Path, as_of=None) -> pd.DataFrame:
+    """Pool exclusivo Tres Arroyos 2023, 2025 y 2026, con igual peso por año.
+
+    Los conteos se normalizan por su propio total registrado, nunca por el
+    número de réplicas ni por la densidad relativa a otras campañas. Los
+    primeros 570 PLM2 de 2023 no tienen inicio de intervalo documentado: su
+    acumulado se conserva, sin asignarlo a días anteriores ni a un pico diario.
+    """
+    root = Path(root)
+    legacy = load_seasonal_reference(
+        root / "models/modelo_clusters_k3.pkl",
+        excluded_years=("2010", "2015"), include_patterns=("tresas",),
     )
-    campaigns = reference[["Progreso_2025", "Progreso_2026"]]
+    if (not legacy["N_Campanas"].eq(1).all()
+            or not legacy["Campanas"].eq("test -emerel tresas 2025.xlsx").all()):
+        raise ValueError("Se requiere una única referencia local de Tres Arroyos 2025.")
+    # Validar también fuentes todavía no habilitadas; no aceptar datos dañados.
+    records = {year: _local_counts(root, year) for year in (2026, 2023)}
+    cutoff = pd.Timestamp(as_of).tz_localize(None).normalize() if as_of is not None else None
+    if cutoff is not None and pd.isna(cutoff):
+        raise ValueError("Fecha de corte de la referencia inválida.")
+    used = {year: cutoff is None or cutoff >= dates.iloc[-1]
+            for year, (dates, _, _) in records.items()}
+    # 2025 es una curva procesada previa a la campaña operativa 2026.
+    used[2025] = cutoff is None or cutoff >= pd.Timestamp("2026-01-01")
+    if not any(used.values()):
+        raise ValueError("No hay referencias locales disponibles para esta fecha.")
+    axis_end = max([int(legacy.Julian_days.max())] + [
+        int(dates.dt.dayofyear.max()) for year, (dates, _, _) in records.items() if used[year]
+    ])
+    reference = pd.DataFrame({"Julian_days": np.arange(1, axis_end + 1, dtype=float)})
+    included, excluded = [], [legacy.Campanas_Excluidas.iloc[0]]
+    if used[2025]:
+        reference["Progreso_2025"] = np.interp(
+            reference.Julian_days, legacy.Julian_days, legacy.Progreso_Mediano,
+            left=np.nan, right=1.0,
+        )
+        included.append(legacy.Campanas.iloc[0])
+    else:
+        excluded.append(legacy.Campanas.iloc[0] + " (disponible desde 01/01/2026)")
+    for year in (2023, 2026):
+        dates, flows, metadata = records[year]
+        metadata["used"] = used[year]
+        reference.attrs[f"source_{year}"] = metadata
+        reference[f"Referencia_{year}_Desde"] = metadata["end"]
+        if used[year]:
+            reference[f"Progreso_{year}"] = np.interp(
+                reference.Julian_days, dates.dt.dayofyear, np.cumsum(flows) / flows.sum(),
+                left=np.nan, right=1.0,
+            )
+            included.append(Path(metadata["path"]).name)
+        else:
+            excluded.append(f"{Path(metadata['path']).name} (disponible desde {dates.iloc[-1]:%d/%m/%Y})")
+    years = sorted(year for year, selected in used.items() if selected)
+    campaigns = reference[[f"Progreso_{year}" for year in years]]
     reference["N_Campanas_Dia"] = campaigns.notna().sum(axis=1)
     for q, column in [(0.10, "Progreso_P10"), (0.50, "Progreso_Mediano"), (0.90, "Progreso_P90")]:
         empirical = campaigns.quantile(q, axis=1)
         reference[column + "_Empirico"] = empirical
-        # Al comenzar la ventana 2026 cambia el número de curvas disponibles.
-        # Ese cambio puede bajar el resumen aunque cada campaña sea creciente.
-        # La envolvente acumulativa conserva el avance previo del ancla. Los
-        # cuantiles originales y ambas curvas quedan visibles para auditoría.
+        # Conserva el criterio vigente de ancla no decreciente cuando cambia
+        # la cantidad de campañas con referencia para ese día del calendario.
         reference[column] = empirical.cummax()
-    reference["N_Campanas"] = 2
-    reference["Campanas_Anos"] = "2025, 2026"
-    reference["Campanas"] += f", {counts_path.name}"
+    changed = reference.N_Campanas_Dia.diff().fillna(reference.N_Campanas_Dia).gt(0)
+    increment = reference.Progreso_Mediano.diff().fillna(reference.Progreso_Mediano)
+    # Un salto al ingresar una curva incompleta al inicio es cambio de
+    # composición, no evidencia de nacimientos ocurridos ese día.
+    reference["Flujo_No_Comparable"] = changed & increment.gt(1e-12)
+    reference["N_Campanas"] = len(years)
+    reference["Campanas_Anos"] = ", ".join(map(str, years))
+    reference["Campanas"] = ", ".join(included)
+    reference["Campanas_Excluidas"] = ", ".join(excluded)
     return reference
 
 

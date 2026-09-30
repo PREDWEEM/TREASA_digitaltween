@@ -45,32 +45,47 @@ modifica el reloj térmico ni los pesos.
 
 ## Referencia estacional
 
-Se selecciona `test -emerel tresas 2025.xlsx` del clasificador original mediante
-el filtro `tresas`, manteniendo la exclusión de 2010 y 2015 y excluyendo
-explícitamente Balcarce y San Pedro. El archivo binario no se modifica.
-`load_local_seasonal_reference` incorpora además los conteos originales
-`data/calibration/tres_arroyos_2026_counts.csv` desde su última fecha,
-16/09/2026. Antes de ese corte, incluso en evaluaciones temporales, utiliza
-exclusivamente 2025. El perfil JSON registra las fuentes y sus hashes.
+El pool utiliza exclusivamente **Tres Arroyos 2023, 2025 y 2026**. La única
+curva seleccionada del clasificador original sigue siendo
+`test -emerel tresas 2025.xlsx`. El binario permanece intacto; todas sus otras
+curvas, incluida `2023.xlsx`, quedan fuera de este pool local.
 
-La curva 2026 es el acumulado de los 17 registros dividido por el total
-observado del 05/02 al 16/09, con interpolación lineal del acumulado entre
-visitas. Conserva las masas por intervalo, no atribuye observaciones diarias
-ni ceros previos al inicio. Cada campaña tiene igual peso en los cuantiles.
-La envolvente de máximo acumulado evita un retroceso del ancla al cambiar
-la disponibilidad de curvas; se conservan cuantiles empíricos sin modificar
-para auditoría. Tras el último conteo se mantiene 1 como referencia de esa
-ventana, sin afirmar ausencia de nacimientos posteriores ni cierre biológico.
-Dos campañas no permiten estimar probabilidades robustas.
+- 2023: adjunto de Ramón, 29 fechas entre 27/02 y 09/10, cinco réplicas y media
+  verificada en plantas/m². Total 2.658,8 plantas/m², sin cero inicial informado.
+- 2025: acumulado de la curva procesada dividido por su total.
+- 2026: 17 registros entre 05/02 y 16/09, acumulados y divididos por su total.
 
-El perfil 2026 registra los filtros y nombres incluidos/excluidos y se regenera
-para actualizar su huella, incluyendo el CSV 2026. El ajuste final utiliza
-ambas referencias y los cortes temporales anteriores al 16/09 sólo 2025.
-Esta revisión conserva los parámetros y las métricas redondeadas del ajuste
-y evaluación temporal, porque al cierre ambas referencias alcanzan 1.
-La referencia se lee en cada ejecución de la interfaz, evitando resultados
-obsoletos de la caché de Streamlit. Se conservan el anclaje estacional, la ANN,
-el motor fisiológico y los datos de campo y meteorología originales.
+Los conteos se interpolan como acumulados, conservando cada masa por intervalo.
+No se infieren nacimientos diarios observados. Se desconocen las fechas previas
+al primer conteo de cada archivo. El primer acumulado positivo 2023 se conserva;
+el salto de composición al ingresar esa referencia no se representa como flujo
+diario ni determina el máximo semanal. Las semanas incompletas quedan señaladas.
+
+Las campañas aportan igual peso a los cuantiles. La envolvente de máximo
+acumulado mantiene el ancla no decreciente; se conservan cuantiles empíricos y
+curvas individuales para auditoría. Tras el último conteo se mantiene 1 como
+supuesto de referencia de la ventana, sin afirmar cierre biológico.
+
+2023 está disponible desde el 09/10/2023, 2025 desde el 01/01/2026 y 2026 desde
+el 16/09/2026. La incorporación de los adjuntos 2023 al sistema ocurrió el
+30/09/2026. Las revisiones retrospectivas no reproducen pronósticos emitidos.
+El ajuste adicional 2026 se regeneró con la nueva huella y el pool de tres años;
+los cortes previos al 16/09 usan 2023 y 2025. El núcleo y los pesos ANN no cambian.
+
+Los Excel originales 2023 se conservan en `data/reference/`, con CSV extraídos,
+réplicas, SD/EE y manifiesto `tres_arroyos_2023_source.json`. La extracción es
+reproducible mediante `scripts/import_reference_2023.py`.
+
+| Original 2023 | SHA-256 |
+|---|---|
+| `tres_arroyos_2023_counts_original.xlsx` | `51eae9e32c3544a1688a7c45cf8343b3486c5af29a168aea30ce9abc52244425` |
+| `tres_arroyos_2023_weather_original.xls` | `a915f3eb6d939e24b0a7cb1b1c9d88c956cc5849b22743ddb322fc55f4f187d6` |
+
+La meteorología adjunta tiene 283 fechas del 01/01 al 10/10, sin fechas
+faltantes. TMAX y TMIN del 17/06 están vacías y no se imputan. La fuente no
+identifica estación ni coordenadas. Se archiva para análisis históricos y no
+sustituye la meteorología operativa ni participa en el cálculo del acumulado
+observado. No se usa para reentrenar la ANN ni ajustar una capa 2023.
 
 ## Meteorología y calibración
 

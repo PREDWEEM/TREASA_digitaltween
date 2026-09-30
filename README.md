@@ -98,39 +98,86 @@ Las coordenadas del modelo son −38,4500, −60,2763; ET0 conserva la latitud
 del motor original. La fuente meteorológica operativa corresponde a INTA
 Barrow, −38,388, −60,346. Ambas ubicaciones se documentan por separado.
 
-Para series parciales se utiliza una referencia exclusivamente local de
-**Tres Arroyos 2025 y 2026**, construida con:
+Para series parciales se utiliza un pool exclusivamente local de
+**Tres Arroyos 2023, 2025 y 2026**, construido con:
 
-- `test -emerel tresas 2025.xlsx`, curva procesada del clasificador original.
-- `data/calibration/tres_arroyos_2026_counts.csv`, los 17 registros del
-  05/02 al 16/09/2026. Se suma el flujo por intervalos, se divide por el total
-  registrado de 12.089,67 plantas/m² y se interpola **el acumulado** entre visitas.
-  Así se conservan los acumulados observados y la masa de cada intervalo,
-  sin presentar como medidos los días internos de cada intervalo.
+| Campaña | Fuente | Alcance |
+|---|---|---|
+| 2023 | `data/reference/tres_arroyos_2023_counts.csv` | 29 visitas del 27/02 al 09/10, cinco réplicas y promedio en plantas/m² |
+| 2025 | `test -emerel tresas 2025.xlsx` | Curva procesada del clasificador original |
+| 2026 | `data/calibration/tres_arroyos_2026_counts.csv` | 17 registros del 05/02 al 16/09, total 12.089,67 plantas/m² |
 
-**Disponibilidad temporal:** para fechas del estado anteriores al 16/09/2026
-se utiliza sólo 2025. Desde esa fecha, incluidas las ejecuciones de 2027,
-se incorporan ambas referencias con igual peso, sin ponderar por densidad ni
-número de visitas. Se mantienen las exclusiones de 2010, 2015, Balcarce y
-San Pedro. La referencia cambia el ancla del denominador estacional; no
-reentrena la ANN ni modifica sus flujos sin normalizar o el reloj térmico.
+Cada curva de conteos usa **suma acumulada de PLM2 / suma de PLM2 registrada**.
+Se interpola el acumulado entre visitas, preservando la masa de cada intervalo.
+Cada campaña tiene el mismo peso en los cuantiles, sin ponderar por densidad,
+número de fechas o cantidad de réplicas. La mediana de tres campañas no es
+su media aritmética. Tanto el histórico del gráfico como el ancla de la
+normalización y el máximo semanal del semáforo se obtienen del mismo pool.
 
-Antes del 05/02, la curva 2026 permanece desconocida y el resumen usa 2025.
-Al comenzar la segunda serie, un cambio en el número de curvas puede reducir
-el cuantil diario. Para que el ancla de progreso no retroceda, se utiliza su
-máximo acumulado. La tabla conserva también los cuantiles `Empirico` sin esa
-regularización y las curvas `Progreso_2025` y `Progreso_2026` originales.
-Después del 16/09, la referencia 2026 mantiene el total de su ventana como
-supuesto de normalización. El último registro **no certifica el cierre
-biológico de la emergencia** ni el agotamiento del banco de semillas.
+**Disponibilidad temporal:** 2023 desde el último conteo del 09/10/2023;
+2025 desde el 01/01/2026 como referencia previa a la campaña operativa;
+2026 desde el 16/09/2026. Las revisiones de 2026 anteriores al 16/09 usan
+2023 y 2025. Desde el 16/09, y para el calendario de referencia 2027,
+participan los tres años. Esta incorporación ocurrió el 30/09/2026: una
+revisión pasada no reproduce la información efectivamente cargada entonces.
+Se conservan las exclusiones de 2010, 2015, Balcarce, San Pedro y todas las
+curvas del clasificador salvo Tres Arroyos 2025. La curva genérica `2023.xlsx`
+del clasificador continúa excluida: la nueva referencia usa el adjunto local.
 
-Dos campañas no permiten cuantificar robustamente la variabilidad entre años.
-P10 y P90 son resúmenes descriptivos, no intervalos de confianza. El total
-observado parcial de un lote no se supone igual a su potencial completo;
-con conteos cargados se estima el potencial a partir de sus intervalos o se
-utiliza un valor previo aportado por el usuario. Consultar 2026 después de
-incorporar su referencia es una reconstrucción retrospectiva, no una
-validación predictiva independiente.
+Antes del 27/02, 2023 permanece desconocido; antes del 05/02 sucede lo mismo
+con 2026. El resumen usa las curvas disponibles en cada día y conserva su
+máximo acumulado para evitar retrocesos cuando cambia el número de campañas.
+La tabla incluye los cuantiles `Empirico` sin esa regularización y las tres
+curvas individuales para auditoría. Tras el último conteo se mantiene el total
+de la ventana como supuesto de normalización, sin certificar cierre biológico
+ni agotamiento del banco de semillas. El eje de referencia conserva los datos
+hasta el 09/10; el gráfico principal sigue recortado al **01/10**.
+
+Tres campañas aportan contexto local, pero sus P10 y P90 son descripciones,
+no intervalos de confianza ni probabilidades robustas. El pool cambia el ancla
+del denominador estacional; no reentrena la ANN ni modifica el flujo sin
+normalizar o el reloj térmico. Las revisiones de campañas incluidas en el pool
+son retrospectivas y no demuestran precisión predictiva independiente.
+
+### Fuentes incorporadas de 2023
+
+Los archivos originales se conservan sin cambios en `data/reference/`:
+
+- `tres_arroyos_2023_counts_original.xlsx`: hoja Emergencias, encabezado en fila 2,
+  fechas en A3:A31, réplicas en B3:F31 y promedios en G3:G31. Los 29 promedios
+  coinciden con las cinco réplicas. Suman **2.658,8 plantas/m²**. El CSV conserva
+  REP1–REP5, PLM2, N_REPLICAS, SD muestral y EE = SD / raíz de 5.
+- `tres_arroyos_2023_weather_original.xls`: hoja Datos diarios, **283 fechas**
+  consecutivas entre 01/01 y 10/10/2023, TMAX, TMIN y precipitación. El CSV
+  asociado conserva **TMAX y TMIN faltantes el 17/06/2023**, sin imputación ni
+  sustitución por cero. El adjunto no identifica estación ni coordenadas.
+- `tres_arroyos_2023_source.json`: procedencia, unidades, transformaciones,
+  ventanas, limitaciones y hashes SHA-256 de originales y CSV.
+
+La meteorología se archiva como fuente asociada para análisis históricos.
+La curva observada se construye con los conteos; no necesita rellenar la
+meteorología faltante ni ejecutar el modelo sobre ese archivo. No reemplaza
+la meteorología operativa, no se asimilan esos conteos como observaciones de
+la campaña actual ni se ajusta una nueva capa de calibración 2023.
+
+El primer conteo, **570 plantas/m² el 27/02**, equivale al 21,44 % del total
+registrado y no tiene fecha inicial de intervalo. Se conserva el acumulado,
+sin inventar un cero previo ni repartirlo entre días desconocidos. Al ingresar
+esa curva al pool puede cambiar la mediana: ese salto se marca
+`Flujo_No_Comparable` y se excluye del flujo diario y del máximo semanal.
+La semana afectada queda parcial y rayada. `Incremento_No_Distribuido` registra
+ese cambio de composición; no es evidencia de un nacimiento diario ni flujo cero.
+La suma de los flujos históricos evaluables no tiene por qué alcanzar 100 %
+cuando parte del incremento no puede distribuirse temporalmente.
+
+Para reproducir la extracción desde los originales:
+
+```bash
+python scripts/import_reference_2023.py
+```
+
+Los archivos y sus limitaciones también se pueden consultar y descargar en
+**Trazabilidad → Fuentes de Tres Arroyos 2023**.
 
 La referencia se recarga en cada ejecución para evitar tablas de versiones
 anteriores conservadas por Streamlit. La pestaña Trazabilidad muestra las
@@ -167,7 +214,7 @@ El eje del flujo y los cuadros al pasar el cursor muestran explícitamente `%`
 para las dos series. Los valores menores del histórico no son proporciones sin
 convertir: la interpolación entre visitas y la combinación de campañas suavizan
 sus picos respecto de una trayectoria con pulsos diarios concentrados.
-Las campañas 2025 y 2026 siguen formando parte del pool cuando corresponde por
+Las campañas 2023, 2025 y 2026 siguen formando parte del pool cuando corresponde por
 fecha, pero no se dibujan como curvas individuales. Sus datos siguen
 disponibles en Trazabilidad. El resumen conserva los supuestos de normalización
 descritos arriba.
@@ -211,7 +258,7 @@ El índice puede superar el 100 %; no es una probabilidad ni un umbral de daño 
 Ambos flujos se comparan en la misma escala fraccional (o ambos en porcentaje),
 conservando sus respectivos denominadores: total de las ventanas históricas
 y total estacional estimado del gemelo. Se mantienen los criterios de disponibilidad
-de campañas: 2025 solamente antes del 16/09/2026; pool 2025–2026 desde esa fecha.
+de campañas: 2023 y 2025 en cortes de 2026 anteriores al 16/09; los tres años desde esa fecha.
 
 El horizonte futuro es móvil desde la fecha elegida, por lo que puede abarcar
 partes de dos barras de semanas calendario. El selector Diario/Semanal no cambia
@@ -232,10 +279,11 @@ pero no altera la campaña meteorológica operativa, cuyo cierre continúa siend
 y disponer de su meteorología. Las pruebas del gráfico usan series sintéticas;
 no constituyen un pronóstico real de 2027.
 
-El ajuste al cierre incluye las dos referencias; cada evaluación temporal
-anterior al cierre conserva únicamente 2025. Se regeneró el perfil con su
-nueva huella, que también incluye el CSV de referencia 2026. Los parámetros
-y las métricas redondeadas del ajuste y evaluación permanecen iguales.
+El perfil adicional 2026 se regeneró con una huella que incluye la nueva fuente
+2023. El ajuste al cierre utiliza los tres años; sus evaluaciones temporales
+anteriores al 16/09 usan 2023 y 2025. Se conservan la ANN, los parámetros
+fisiológicos y los conteos y la meteorología de ajuste 2026. Las métricas
+actualizadas de la evaluación retrospectiva aparecen a continuación.
 
 Consulte [MODEL_PROVENANCE.md](MODEL_PROVENANCE.md) para la revisión de origen,
 los hashes y la correspondencia científica.
@@ -290,10 +338,10 @@ muestreo medido.
 | Evaluación | RMSE base | RMSE calibrado |
 |---|---:|---:|
 | Ajuste retrospectivo, 16 intervalos | 1.082,79 | 383,20 |
-| Evaluación temporal, 10 intervalos posteriores | 716,33 | 683,27 |
+| Evaluación temporal, 10 intervalos posteriores | 668,38 | 620,79 |
 
 RMSE en plantas/m² por intervalo. La reducción es del 64,6 % en el ajuste y
-del 4,6 % en la evaluación temporal; mejoran 4 de 10 intervalos posteriores.
+del 7,1 % en la evaluación temporal; mejoran 4 de 10 intervalos posteriores.
 El perfil es **experimental**: un parámetro alcanza su límite, sólo se dispone
 de una campaña de ajuste y se usa meteorología realizada, no pronósticos
 archivados por emisión. Estos resultados no validan transferencia a otros

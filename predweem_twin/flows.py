@@ -9,7 +9,7 @@ import pandas as pd
 def annual_historical_reference(reference, as_of):
     """Traslada el pool al calendario consultado sin inventar una cola anual.
 
-    Las referencias locales proceden de 2025 y 2026 (años no bisiestos).
+    Las referencias locales proceden de 2023, 2025 y 2026 (años no bisiestos).
     En un año bisiesto se conserva mes/día y se interpola el 29 de febrero.
     Fuera del eje histórico se deja NaN, no un supuesto de emergencia nula.
     El flujo diario es derivado del acumulado, no un conteo diario observado.
@@ -22,23 +22,29 @@ def annual_historical_reference(reference, as_of):
     days[(dates.month == 2) & (dates.day == 29)] = 59.5
     axis = reference["Julian_days"].to_numpy(float)
     columns = ["Progreso_Mediano"] + [
-        column for column in ("Progreso_2025", "Progreso_2026")
-        if column in reference
+        column for column in reference
+        if column.startswith("Progreso_") and column.removeprefix("Progreso_").isdigit()
     ]
     for column in columns:
         frame[column] = np.interp(
             days, axis, reference[column].to_numpy(float),
             left=np.nan, right=np.nan,
         )
-    # El resumen operativo conserva su supuesto de normalización hasta el
-    # final del eje; la curva individual 2026 muestra sólo su ventana real.
-    source_2026 = reference.attrs.get("source_2026", {})
-    if "Progreso_2026" in frame and source_2026.get("end"):
-        end_day = pd.Timestamp(source_2026["end"]).dayofyear
-        frame.loc[days > end_day, "Progreso_2026"] = np.nan
+    # Los individuales conservan sus ventanas reales. El resumen mantiene
+    # el total tras el cierre del archivo sólo como supuesto de referencia.
+    for year in (2023, 2026):
+        source = reference.attrs.get(f"source_{year}", {})
+        if f"Progreso_{year}" in frame and source.get("end"):
+            end_day = pd.Timestamp(source["end"]).dayofyear
+            frame.loc[days > end_day, f"Progreso_{year}"] = np.nan
     frame["Flujo_Diario"] = frame["Progreso_Mediano"].diff().clip(lower=0)
     if axis[0] == 1:
         frame.loc[0, "Flujo_Diario"] = frame.loc[0, "Progreso_Mediano"]
+    unsupported = reference.get("Flujo_No_Comparable", pd.Series(False, index=reference.index))
+    changes = np.isin(days, axis[unsupported.to_numpy(bool)])
+    frame["Cambio_Composicion_Pool"] = changes
+    frame["Incremento_No_Distribuido"] = frame["Flujo_Diario"].fillna(frame["Progreso_Mediano"]).where(changes, 0.0)
+    frame.loc[changes, "Flujo_Diario"] = np.nan
     frame.attrs["campaigns"] = reference["Campanas_Anos"].iloc[0]
     return frame
 

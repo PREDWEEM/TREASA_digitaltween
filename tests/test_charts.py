@@ -37,7 +37,7 @@ def test_annual_reference_keeps_unknown_periods_and_observed_2026_window(referen
     last_day = pd.Timestamp("2027-01-01") + pd.Timedelta(days=reference.Julian_days.max() - 1)
     outside = annual.Fecha.gt(last_day)
     assert annual.loc[outside, ["Progreso_Mediano", "Flujo_Diario"]].isna().all().all()
-    assert annual.Flujo_Diario.sum() == pytest.approx(1.)
+    assert annual.Flujo_Diario.sum() + annual.Incremento_No_Distribuido.sum() == pytest.approx(1.)
 
 
 def test_reference_preserves_month_day_in_leap_year(reference):
@@ -82,7 +82,7 @@ def test_historical_backdrop_does_not_leak_2026_into_earlier_cutoffs():
     ref = load_local_seasonal_reference(ROOT, as_of="2026-05-05")
     annual = annual_historical_reference(ref, "2026-05-05")
     assert "Progreso_2026" not in annual
-    assert annual.attrs["campaigns"] == "2025"
+    assert annual.attrs["campaigns"] == "2023, 2025"
 
 
 def test_no_forecast_trace_when_weather_ends_at_cutoff(reference):

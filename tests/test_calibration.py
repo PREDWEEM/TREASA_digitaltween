@@ -182,13 +182,13 @@ def test_calibration_keeps_tres_arroyos_decay_and_local_reference(real_data):
     assert saved["seasonal_reference"]["excluded_sites"] == ["balcarce", "san pedro"]
     assert "balcarce" not in saved["seasonal_reference"]["campaigns"].lower()
     assert "san pedro" not in saved["seasonal_reference"]["campaigns"].lower()
-    assert saved["seasonal_reference"]["n_campaigns"] == 2
+    assert saved["seasonal_reference"]["n_campaigns"] == 3
     assert saved["seasonal_reference"]["source_2026"]["sample_count"] == 17
 
 
 def test_temporal_calibration_checks_do_not_use_the_2026_total():
     holdout = pd.read_csv(DATA / "tres_arroyos_2026_holdout.csv")
-    assert holdout["Campanas_referencia"].astype(str).eq("2025").all()
+    assert holdout["Campanas_referencia"].astype(str).eq("2023, 2025").all()
     assert pd.to_datetime(holdout["Corte_entrenamiento"]).lt("2026-09-16").all()
 
 

@@ -1,0 +1,51 @@
+{
+  "site": "Tres Arroyos",
+  "year": 2023,
+  "role": "referencia histórica observada",
+  "incorporated_on": "2026-09-30",
+  "available_from": "2023-10-09",
+  "availability_note": "Disponibilidad del total por cierre del archivo; incorporado al sistema en 2026. Las revisiones pasadas son retrospectivas.",
+  "counts": {
+    "uploaded_name": "Datos emergencia Lolium 2023- RAMON Tres Arroyos.xlsx",
+    "original_file": "tres_arroyos_2023_counts_original.xlsx",
+    "original_sha256": "51eae9e32c3544a1688a7c45cf8343b3486c5af29a168aea30ce9abc52244425",
+    "file": "tres_arroyos_2023_counts.csv",
+    "sha256": "6f8a2c1943c2f2113429edcd8322bd23bb465816bdf4cbf61f0b5e9e6675d449",
+    "sheet": "Emergencias",
+    "header_row": 2,
+    "replicate_count": 5,
+    "units": "plantas/m²",
+    "mean_verified_against_replicates": true,
+    "replicate_scale_factor": 1.0,
+    "standard_error": "desvío estándar muestral entre cinco réplicas / raíz de 5; no pondera el pool",
+    "sample_count": 29,
+    "start": "2023-02-27",
+    "end": "2023-10-09",
+    "window_total_plm2": 2658.8,
+    "initial_zero_reference": false,
+    "first_count_plm2": 570.0,
+    "first_interval_start": null,
+    "processing": "acumulado PLM2 / suma PLM2 de las 29 visitas; interpolación lineal entre visitas; sin cero inicial inventado",
+    "scope": "ventana registrada; no certifica cierre biológico ni ausencia previa al primer conteo"
+  },
+  "weather": {
+    "uploaded_name": "meteo 2023 tres arroyos.xls",
+    "original_file": "tres_arroyos_2023_weather_original.xls",
+    "original_sha256": "a915f3eb6d939e24b0a7cb1b1c9d88c956cc5849b22743ddb322fc55f4f187d6",
+    "file": "tres_arroyos_2023_weather.csv",
+    "sha256": "9d53675afd67d08675a9ae712768cc1286cc3b4c9c3e9abae19e1cd3d1f272f3",
+    "sheet": "Datos diarios",
+    "rows": 283,
+    "start": "2023-01-01",
+    "end": "2023-10-10",
+    "temperature_units": "°C",
+    "precipitation_units": "mm",
+    "station": null,
+    "station_note": "El adjunto no identifica estación ni coordenadas.",
+    "missing_temperature_dates": [
+      "2023-06-17"
+    ],
+    "imputation": "ninguna; faltantes conservados, no sustituidos por cero",
+    "role": "archivo histórico asociado; no reemplaza meteorología operativa ni calcula la curva observada"
+  }
+}

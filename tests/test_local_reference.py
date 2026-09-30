@@ -31,17 +31,17 @@ def test_2026_conserves_each_observed_interval_and_does_not_invent_early_zeros()
     assert reference.loc[reference.Julian_days < 36, "N_Campanas_Dia"].eq(1).all()
 
 
-def test_two_local_campaigns_receive_equal_weight_and_remain_monotone():
+def test_three_local_campaigns_receive_equal_weight_and_remain_monotone():
     reference = load_local_seasonal_reference(ROOT, as_of="2027-03-27")
-    assert reference.N_Campanas.eq(2).all()
-    assert reference.Campanas_Anos.eq("2025, 2026").all()
+    assert reference.N_Campanas.eq(3).all()
+    assert reference.Campanas_Anos.eq("2023, 2025, 2026").all()
     assert reference.Campanas.eq(
-        "test -emerel tresas 2025.xlsx, tres_arroyos_2026_counts.csv"
+        "test -emerel tresas 2025.xlsx, tres_arroyos_2023_counts.csv, tres_arroyos_2026_counts.csv"
     ).all()
-    valid = reference.Julian_days >= 36
+    valid = reference.Julian_days >= 58
     np.testing.assert_allclose(
         reference.loc[valid, "Progreso_Mediano_Empirico"],
-        (reference.loc[valid, "Progreso_2025"] + reference.loc[valid, "Progreso_2026"]) / 2,
+        reference.loc[valid, ["Progreso_2023", "Progreso_2025", "Progreso_2026"]].median(axis=1),
     )
     for column in ["Progreso_P10", "Progreso_Mediano", "Progreso_P90"]:
         assert reference[column].between(0, 1).all()
@@ -57,15 +57,17 @@ def test_two_local_campaigns_receive_equal_weight_and_remain_monotone():
 def test_no_2026_reference_before_the_last_count(cutoff):
     actual = load_local_seasonal_reference(ROOT, as_of=cutoff)
     legacy = load_seasonal_reference(ROOT / "models/modelo_clusters_k3.pkl", include_patterns=("tresas",))
-    assert actual.N_Campanas.eq(1).all()
+    assert actual.N_Campanas.eq(2).all()
+    assert actual.Campanas_Anos.eq("2023, 2025").all()
     assert "Progreso_2026" not in actual
-    for column in ["Progreso_P10", "Progreso_Mediano", "Progreso_P90"]:
-        pd.testing.assert_series_equal(actual[column], legacy[column])
+    np.testing.assert_allclose(actual.Progreso_2025.iloc[:len(legacy)], legacy.Progreso_Mediano)
+    expected = actual[["Progreso_2023", "Progreso_2025"]].median(axis=1).cummax()
+    np.testing.assert_allclose(actual.Progreso_Mediano, expected)
     assert "2026_counts.csv" in actual.Campanas_Excluidas.iloc[0]
-    assert load_local_seasonal_reference(ROOT, as_of="2026-09-16").N_Campanas.eq(2).all()
+    assert load_local_seasonal_reference(ROOT, as_of="2026-09-16").N_Campanas.eq(3).all()
 
 
-def test_partial_2027_run_uses_both_references_without_forcing_100_percent():
+def test_partial_2027_run_uses_three_references_without_forcing_100_percent():
     weather = pd.read_csv(ROOT / "data/calibration/tres_arroyos_2026_weather.csv")
     # Meteorología sintética de prueba: desplazar un año, no un pronóstico 2027.
     weather["Fecha"] = pd.to_datetime(weather["Fecha"]) + pd.DateOffset(years=1)
