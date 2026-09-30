@@ -22,6 +22,7 @@ from predweem_twin.coverage import (
 )
 from predweem_twin.core import ModelParameters, PracticalANNModel, run_predweem
 from predweem_twin.observations import prepare_observations, read_observation_file
+from predweem_twin.onset import onset_alert
 from predweem_twin.scenarios import apply_scenario
 from predweem_twin.seasonal import load_local_seasonal_reference
 from predweem_twin.state import (
@@ -140,6 +141,15 @@ with st.expander("Configuración del gemelo", expanded=True):
         coverage_notice = st.empty()
     with parameter_column:
         st.markdown("**Parámetros del gemelo**")
+        onset_alert_enabled = st.toggle(
+            "Alerta preventiva de inicio · 7 días", value=True,
+            key="onset_alert_enabled",
+            help=(
+                "Avisa si el primer pico modelado aparece dentro de los próximos siete días. "
+                "Sirve para organizar recorridas; no adelanta el reloj térmico. "
+                "Funciona también sin conteos de campo."
+            ),
+        )
         w_max = st.number_input(
             "Agua superficial Wmax (mm)", min_value=5.0, max_value=60.0,
             value=18.81, step=0.1, format="%.2f",
@@ -268,6 +278,10 @@ snapshot = build_twin_snapshot(
     seasonal_reference=seasonal_reference,
 )
 snapshot["calibration"] = calibration_audit
+snapshot["onset_alert"] = onset_alert(
+    base_trajectory, as_of, observations=active_observations,
+    enabled=onset_alert_enabled,
+)
 milestones = milestone_dates(twin_trajectory)
 
 st.markdown(
@@ -345,6 +359,21 @@ if coverage_series_for_model is not None:
         f'**{pd.Timestamp(last_coverage["Fecha"]).strftime("%d/%m/%Y")}**; '
         "los días intermedios se interpolan y luego se mantiene el último valor."
     )
+
+if onset_alert_enabled:
+    onset_notice = snapshot["onset_alert"]
+    show_onset = st.warning if onset_notice["level"] == "warning" else st.info
+    show_onset(f'**{onset_notice["title"]}**. {onset_notice["message"]}')
+    st.caption(
+        f'Base del aviso: {onset_notice["mode"]}. '
+        "La alerta orienta la vigilancia; no confirma el inicio ni indica aplicar herbicidas. "
+        "El TT continúa desde el primer pico del modelo."
+    )
+    if onset_notice["mode"].startswith("Revisión retrospectiva"):
+        st.caption(
+            "Este aviso usa meteorología histórica o no verificable al corte: "
+            "no demuestra una alerta emitida siete días antes."
+        )
 
 metric_columns = st.columns(5)
 metric_columns[0].metric("Emergencia estimada", f'{snapshot["emergence"]:.0%}')
@@ -987,6 +1016,8 @@ with tab_scenarios:
     st.caption("Los escenarios son contrafactuales exploratorios; no modifican el estado guardado del lote.")
 
 with tab_audit:
+    with st.expander("Alerta preventiva de inicio · detalle"):
+        st.json(snapshot["onset_alert"])
     st.subheader("Trazabilidad científica")
     st.write("Campañas utilizadas: " + seasonal_reference["Campanas"].iloc[0])
     st.caption("Campañas excluidas: " + seasonal_reference["Campanas_Excluidas"].iloc[0])

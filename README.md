@@ -71,6 +71,30 @@ para recuperar los registros después de un reinicio o redespliegue.
 
 ## Motor de Tres Arroyos
 
+### Alerta preventiva de inicio (hasta 7 días)
+
+Activada por defecto en **Configuración del gemelo**, con opción de desactivarla.
+Consulta la trayectoria base desde el comienzo de la campaña y avisa cuando
+`Primer_Pico_Habilitado` se activa entre mañana y el séptimo día, inclusive.
+Muestra la fecha modelada y los días de anticipación disponibles para organizar
+una recorrida. Funciona sin observaciones de campo. Si hay un conteo positivo
+del lote hasta el corte, informa que ya había emergencia a más tardar en esa visita;
+no trata esa fecha como el inicio biológico exacto.
+
+La alerta **no desplaza curvas, no retrocede el origen del TT ni cambia los
+umbrales térmicos o de intensidad**. Es un aviso visual en la app, no una
+notificación externa. Puede anticipar hasta siete días si la meteorología y
+el detector lo permiten; no garantiza detectar cada inicio. Si faltan días,
+no informa ausencia de emergencia: indica horizonte incompleto. Una señal de
+inicio dentro de los días disponibles sí genera vigilancia preventiva.
+
+Las revisiones con meteorología histórica, sin procedencia verificable o con
+emisiones posteriores al corte se identifican explícitamente. No equivalen a
+pronósticos emitidos anticipadamente. La ausencia de señal no descarta nacimientos.
+El detalle queda en Trazabilidad y en el estado guardado (`onset_alert`).
+
+### Parámetros fisiológicos
+
 La configuración inicial conserva cobertura 20 %, Wmax 18,81 mm, exponente Kr=0,
 latencia JD 25, termoinhibición de cinco días a 24 °C y primer pico mayor que 0,20.
 El choque hídrico usa 45 mm en tres días, hasta JD 110, con piso de emergencia
