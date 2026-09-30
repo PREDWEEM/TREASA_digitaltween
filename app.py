@@ -491,9 +491,17 @@ with tab_state:
         )
         if flow_frequency == "Semanal":
             st.caption(
+                "🔴 Alta: >75 % del máximo histórico · 🟠 Media: 25–75 % · "
+                "🟡 Baja: >0 y <25 % · 🟢 Nula: flujo semanal = 0. "
+                "El histórico usa los mismos colores en tono tenue. "
+                "Las marcas verdes sobre cero indican semanas completas sin flujo del gemelo."
+            )
+            st.caption(
                 "Semanas de lunes a domingo: suma de los flujos diarios. "
-                "Las barras rayadas son parciales; al pasar el cursor se indican los días incluidos "
-                "y si contienen proyección. Compare semanas completas en ambas series."
+                "Las barras parciales son grises y rayadas, sin categoría; "
+                "también se usa gris si falta una referencia para clasificar un flujo positivo. "
+                "El cursor muestra la intensidad, la proporción del máximo y los días incluidos. "
+                "El indicador a 7 días usa mañana–día 7; puede abarcar partes de dos semanas calendario."
             )
     with cumulative_column:
         st.subheader("Emergencia acumulada")

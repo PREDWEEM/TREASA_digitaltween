@@ -260,11 +260,24 @@ El selector **Mostrar flujo** ofrece **Semanal** (por defecto) y **Diario**.
 La vista semanal suma los porcentajes diarios en las mismas semanas de lunes a
 domingo para ambas series; no calcula promedios, no divide por el pico y no
 modifica la curva acumulada, el estado del gemelo ni las exportaciones diarias.
-Las semanas incompletas aparecen rayadas; el detalle indica los días disponibles
+Las semanas incompletas aparecen grises y rayadas; el detalle indica los días disponibles
 y cuántos pertenecen a la proyección. No se extrapolan los días faltantes ni se
 incluyen datos posteriores al horizonte meteorológico. Para comparar magnitudes,
 se deben usar semanas completas en ambas series. Los límites del 1 de enero y
 1 de octubre también pueden producir semanas parciales.
+Las columnas completas se colorean con la misma clasificación del indicador:
+**rojo** (>75 % del máximo semanal histórico), **naranja** (25–75 % inclusive),
+**amarillo** (>0 y <25 %) y **verde** (flujo cero). El denominador es el máximo
+de las semanas completas del pool visible, en la misma escala que el flujo del
+gemelo. Se calcula con la referencia disponible para la fecha consultada.
+Esta comparación solo determina el color: la altura sigue siendo el porcentaje
+del total estacional, sin renormalizar por el máximo. El histórico usa los mismos
+colores con menor opacidad. Las semanas completas sin flujo del gemelo se señalan
+con marcas verdes en y=0. Una semana parcial, inválida o un flujo positivo sin
+máximo histórico disponible queda sin categoría, en gris.
+El detalle al pasar el cursor muestra la categoría y el porcentaje del máximo.
+El indicador de los próximos siete días y las barras comparten los umbrales;
+sus ventanas son diferentes: mañana–día 7 frente a lunes–domingo.
 La agregación facilita comparar la distribución temporal, pero no elimina las
 diferencias entre el pool y el gemelo ni demuestra una mejora predictiva.
 El fondo tenue muestra el resumen del pool histórico local,
