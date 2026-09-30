@@ -45,19 +45,21 @@ modifica el reloj térmico ni los pesos.
 
 ## Referencia estacional
 
-El pool utiliza exclusivamente **Tres Arroyos 2023, 2025 y 2026**. La única
+El pool utiliza exclusivamente **Tres Arroyos 2023, 2024, 2025 y 2026**. La única
 curva seleccionada del clasificador original sigue siendo
 `test -emerel tresas 2025.xlsx`. El binario permanece intacto; todas sus otras
-curvas, incluida `2023.xlsx`, quedan fuera de este pool local.
+curvas, incluidas `2023.xlsx` y `2024.xlsx`, quedan fuera de este pool local.
 
 - 2023: adjunto de Ramón, 29 fechas entre 27/02 y 09/10, cinco réplicas y media
   verificada en plantas/m². Total 2.658,8 plantas/m², sin cero inicial informado.
+- 2024: adjunto **emergencia 2024.xlsx**, diez promedios entre 15/02 y 30/07,
+  total 7.946,67 plantas/m². Sin réplicas individuales ni cero inicial.
 - 2025: acumulado de la curva procesada dividido por su total.
 - 2026: 17 registros entre 05/02 y 16/09, acumulados y divididos por su total.
 
 Los conteos se interpolan como acumulados, conservando cada masa por intervalo.
 No se infieren nacimientos diarios observados. Se desconocen las fechas previas
-al primer conteo de cada archivo. El primer acumulado positivo 2023 se conserva;
+al primer conteo de cada archivo. Los primeros acumulados positivos de 2023 y 2024 se conservan;
 el salto de composición al ingresar esa referencia no se representa como flujo
 diario ni determina el máximo semanal. Las semanas incompletas quedan señaladas.
 
@@ -66,11 +68,14 @@ acumulado mantiene el ancla no decreciente; se conservan cuantiles empíricos y
 curvas individuales para auditoría. Tras el último conteo se mantiene 1 como
 supuesto de referencia de la ventana, sin afirmar cierre biológico.
 
-2023 está disponible desde el 09/10/2023, 2025 desde el 01/01/2026 y 2026 desde
-el 16/09/2026. La incorporación de los adjuntos 2023 al sistema ocurrió el
+2023 está disponible desde el 09/10/2023, 2024 desde el 30/07/2024,
+2025 desde el 01/01/2026 y 2026 desde
+el 16/09/2026. La incorporación de los adjuntos 2023 y 2024 al sistema ocurrió el
 30/09/2026. Las revisiones retrospectivas no reproducen pronósticos emitidos.
-El ajuste adicional 2026 se regeneró con la nueva huella y el pool de tres años;
-los cortes previos al 16/09 usan 2023 y 2025. El núcleo y los pesos ANN no cambian.
+El ajuste adicional 2026 se regeneró con la nueva huella y el pool de cuatro años;
+los cortes previos al 16/09 usan 2023, 2024 y 2025. Los pesos ANN y las reglas fisiológicas no cambian.
+El núcleo pasa las fechas al cálculo del progreso histórico para alinear el
+calendario bisiesto con los gráficos, sin cambiar el flujo bruto ni el reloj térmico.
 
 Los Excel originales 2023 se conservan en `data/reference/`, con CSV extraídos,
 réplicas, SD/EE y manifiesto `tres_arroyos_2023_source.json`. La extracción es
@@ -86,6 +91,29 @@ faltantes. TMAX y TMIN del 17/06 están vacías y no se imputan. La fuente no
 identifica estación ni coordenadas. Se archiva para análisis históricos y no
 sustituye la meteorología operativa ni participa en el cálculo del acumulado
 observado. No se usa para reentrenar la ANN ni ajustar una capa 2023.
+
+Los originales 2024 se conservan en `data/reference/`, junto con conteos,
+meteorología extraída y `tres_arroyos_2024_source.json`. La extracción se reproduce
+con `scripts/import_reference_2024.py`.
+
+| Original 2024 | SHA-256 |
+|---|---|
+| `tres_arroyos_2024_counts_original.xlsx` | `b480daf0dd201b52945b5a70b695c27f240ab8cc96d16af81d759f15cf58fb33` |
+| `tres_arroyos_2024_weather_original.csv` | `42d534e9863f59fe238af080ff204857c02c9ce73962f309c7ff49661dd5088a` |
+
+La meteorología 2024 contiene 335 registros fechados completos del 01/01 al
+30/11, incluido el 29/02. De las 23.705 filas originales, 23.370 no tienen fecha:
+885 vacías y 22.485 sólo con precipitación. Se excluyen del CSV procesado, sin
+asignar fechas ni alterar el original. No se identifica estación ni se reemplaza
+la meteorología operativa. No se reentrena la ANN ni se calibra una capa 2024.
+
+El calendario del pool conserva mes/día. El conteo 29/02/2024 ocupa la coordenada
+59.5 de un eje común no bisiesto; los días de marzo en adelante no se desplazan.
+Las curvas conservan los acumulados en todas las fechas muestreadas; los valores
+intermedios se interpolan en ese eje. En una vista no bisiesta se integra el
+incremento del 29/02 en el paso al 01/03. El primer conteo 2024 (346,67 plantas/m²)
+no se reparte en días desconocidos. El 100 % se refiere a la ventana del archivo:
+la prolongación después del 30/07 no acredita el fin de la emergencia anual.
 
 ## Meteorología y calibración
 

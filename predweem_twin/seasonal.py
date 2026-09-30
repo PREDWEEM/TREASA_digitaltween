@@ -14,6 +14,15 @@ import pandas as pd
 EXCLUDED_SITES = ("balcarce", "san pedro")
 
 
+def calendar_reference_days(dates):
+    """Coordenada común por mes/día; conserva 29/02 entre 28/02 y 01/03."""
+    dates = pd.DatetimeIndex(pd.to_datetime(dates))
+    days = dates.dayofyear.to_numpy(dtype=float)
+    days[dates.is_leap_year & (dates.month > 2)] -= 1
+    days[(dates.month == 2) & (dates.day == 29)] = 59.5
+    return days
+
+
 def load_seasonal_reference(
     source: str | Path,
     excluded_years: tuple[str, ...] = ("2010", "2015"),
@@ -102,28 +111,30 @@ def _local_counts(root, year):
         "processing": "acumulado / total registrado; interpolación lineal entre visitas",
         "scope": "ventana registrada; no certifica el cierre biológico de la campaña",
     }
-    if year == 2023:
-        source = json.loads((root / "data/reference/tres_arroyos_2023_source.json").read_text())
-        if (source.get("site") != "Tres Arroyos" or source.get("year") != 2023
+    if year in (2023, 2024):
+        source_file = f"data/reference/tres_arroyos_{year}_source.json"
+        source = json.loads((root / source_file).read_text())
+        if (source.get("site") != "Tres Arroyos" or source.get("year") != year
                 or source["counts"]["sha256"] != metadata["sha256"]):
-            raise ValueError("La procedencia de Tres Arroyos 2023 no coincide con los conteos.")
+            raise ValueError(f"La procedencia de Tres Arroyos {year} no coincide con los conteos.")
+        metadata.update(replicate_count=source["counts"]["replicate_count"], first_interval_start=None,
+                        source_file=source_file,
+                        weather=source["weather"], incorporated_on=source["incorporated_on"])
+    if year == 2023:
         replicas = counts[[f"REP{i}" for i in range(1, 6)]].to_numpy(float)
         if (not np.isfinite(replicas).all() or (replicas < 0).any()
                 or not np.allclose(replicas.mean(axis=1), flows, rtol=0, atol=1e-9)):
             raise ValueError("Las réplicas 2023 no coinciden con el promedio PLM2.")
-        metadata.update(replicate_count=5, first_interval_start=None,
-                        source_file="data/reference/tres_arroyos_2023_source.json",
-                        weather=source["weather"], incorporated_on=source["incorporated_on"])
     return dates, flows, metadata
 
 
 def load_local_seasonal_reference(root: str | Path, as_of=None) -> pd.DataFrame:
-    """Pool exclusivo Tres Arroyos 2023, 2025 y 2026, con igual peso por año.
+    """Pool exclusivo Tres Arroyos 2023–2026, con igual peso por año.
 
     Los conteos se normalizan por su propio total registrado, nunca por el
     número de réplicas ni por la densidad relativa a otras campañas. Los
-    primeros 570 PLM2 de 2023 no tienen inicio de intervalo documentado: su
-    acumulado se conserva, sin asignarlo a días anteriores ni a un pico diario.
+    primeros conteos de 2023 y 2024 no tienen inicio de intervalo documentado:
+    se conservan sin asignarlos a días anteriores ni a un pico diario.
     """
     root = Path(root)
     legacy = load_seasonal_reference(
@@ -134,7 +145,7 @@ def load_local_seasonal_reference(root: str | Path, as_of=None) -> pd.DataFrame:
             or not legacy["Campanas"].eq("test -emerel tresas 2025.xlsx").all()):
         raise ValueError("Se requiere una única referencia local de Tres Arroyos 2025.")
     # Validar también fuentes todavía no habilitadas; no aceptar datos dañados.
-    records = {year: _local_counts(root, year) for year in (2026, 2023)}
+    records = {year: _local_counts(root, year) for year in (2026, 2023, 2024)}
     cutoff = pd.Timestamp(as_of).tz_localize(None).normalize() if as_of is not None else None
     if cutoff is not None and pd.isna(cutoff):
         raise ValueError("Fecha de corte de la referencia inválida.")
@@ -145,9 +156,13 @@ def load_local_seasonal_reference(root: str | Path, as_of=None) -> pd.DataFrame:
     if not any(used.values()):
         raise ValueError("No hay referencias locales disponibles para esta fecha.")
     axis_end = max([int(legacy.Julian_days.max())] + [
-        int(dates.dt.dayofyear.max()) for year, (dates, _, _) in records.items() if used[year]
+        int(calendar_reference_days(dates).max()) for year, (dates, _, _) in records.items() if used[year]
     ])
-    reference = pd.DataFrame({"Julian_days": np.arange(1, axis_end + 1, dtype=float)})
+    axis = np.arange(1, axis_end + 1, dtype=float)
+    if used[2024]:
+        axis = np.sort(np.append(axis, 59.5))
+    reference = pd.DataFrame({"Julian_days": axis})
+    reference.attrs["calendar_basis"] = "month_day_nonleap_feb29_half"
     included, excluded = [], [legacy.Campanas_Excluidas.iloc[0]]
     if used[2025]:
         reference["Progreso_2025"] = np.interp(
@@ -157,14 +172,14 @@ def load_local_seasonal_reference(root: str | Path, as_of=None) -> pd.DataFrame:
         included.append(legacy.Campanas.iloc[0])
     else:
         excluded.append(legacy.Campanas.iloc[0] + " (disponible desde 01/01/2026)")
-    for year in (2023, 2026):
+    for year in (2023, 2024, 2026):
         dates, flows, metadata = records[year]
         metadata["used"] = used[year]
         reference.attrs[f"source_{year}"] = metadata
         reference[f"Referencia_{year}_Desde"] = metadata["end"]
         if used[year]:
             reference[f"Progreso_{year}"] = np.interp(
-                reference.Julian_days, dates.dt.dayofyear, np.cumsum(flows) / flows.sum(),
+                reference.Julian_days, calendar_reference_days(dates), np.cumsum(flows) / flows.sum(),
                 left=np.nan, right=1.0,
             )
             included.append(Path(metadata["path"]).name)
@@ -192,10 +207,12 @@ def load_local_seasonal_reference(root: str | Path, as_of=None) -> pd.DataFrame:
 
 
 def reference_progress(
-    reference: pd.DataFrame, julian_days
+    reference: pd.DataFrame, julian_days, *, dates=None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Interpola P10, mediana y P90 para uno o varios días julianos."""
-    days = np.asarray(julian_days, dtype=float)
+    """Interpola cuantiles; en el pool local alinea por mes/día si hay fechas."""
+    days = (calendar_reference_days(dates)
+            if dates is not None and reference.attrs.get("calendar_basis") == "month_day_nonleap_feb29_half"
+            else np.asarray(julian_days, dtype=float))
     axis = reference["Julian_days"].to_numpy(float)
     values = []
     for column in ("Progreso_P10", "Progreso_Mediano", "Progreso_P90"):
@@ -226,7 +243,7 @@ def partial_season_normalization(
     candidates = trajectory.index[trajectory["Fecha"] <= cutoff].tolist()
     anchor_idx = candidates[-1] if candidates else 0
     p10, median, p90 = reference_progress(
-        reference, trajectory["Julian_days"].to_numpy(float)
+        reference, trajectory["Julian_days"].to_numpy(float), dates=trajectory["Fecha"]
     )
     raw_cumulative = trajectory["EMERAC"].to_numpy(float)
 

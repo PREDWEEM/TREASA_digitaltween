@@ -5,21 +5,21 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from .seasonal import calendar_reference_days
+
 
 def annual_historical_reference(reference, as_of):
     """Traslada el pool al calendario consultado sin inventar una cola anual.
 
-    Las referencias locales proceden de 2023, 2025 y 2026 (años no bisiestos).
-    En un año bisiesto se conserva mes/día y se interpola el 29 de febrero.
+    Las referencias locales proceden de 2023, 2024, 2025 y 2026.
+    Se conserva mes/día y el dato 29/02/2024 en la coordenada común 59.5.
     Fuera del eje histórico se deja NaN, no un supuesto de emergencia nula.
     El flujo diario es derivado del acumulado, no un conteo diario observado.
     """
     year = pd.Timestamp(as_of).year
     dates = pd.date_range(f"{year}-01-01", f"{year}-12-31")
     frame = pd.DataFrame({"Fecha": dates})
-    days = dates.dayofyear.to_numpy(dtype=float)
-    days[(dates.is_leap_year) & (dates.month > 2)] -= 1
-    days[(dates.month == 2) & (dates.day == 29)] = 59.5
+    days = calendar_reference_days(dates)
     axis = reference["Julian_days"].to_numpy(float)
     columns = ["Progreso_Mediano"] + [
         column for column in reference
@@ -32,10 +32,10 @@ def annual_historical_reference(reference, as_of):
         )
     # Los individuales conservan sus ventanas reales. El resumen mantiene
     # el total tras el cierre del archivo sólo como supuesto de referencia.
-    for year in (2023, 2026):
+    for year in (2023, 2024, 2026):
         source = reference.attrs.get(f"source_{year}", {})
         if f"Progreso_{year}" in frame and source.get("end"):
-            end_day = pd.Timestamp(source["end"]).dayofyear
+            end_day = calendar_reference_days([source["end"]])[0]
             frame.loc[days > end_day, f"Progreso_{year}"] = np.nan
     frame["Flujo_Diario"] = frame["Progreso_Mediano"].diff().clip(lower=0)
     if axis[0] == 1:

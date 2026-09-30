@@ -45,7 +45,7 @@ def test_reference_preserves_month_day_in_leap_year(reference):
     leap = annual_historical_reference(reference, "2028-05-05").set_index("Fecha")
     assert leap.loc["2028-03-01", "Progreso_Mediano"] == normal.loc["2027-03-01", "Progreso_Mediano"]
     assert leap.loc["2028-02-29", "Progreso_Mediano"] == pytest.approx(
-        (normal.loc["2027-02-28", "Progreso_Mediano"] + normal.loc["2027-03-01", "Progreso_Mediano"]) / 2
+        reference.set_index("Julian_days").loc[59.5, "Progreso_Mediano"]
     )
 
 
@@ -82,7 +82,7 @@ def test_historical_backdrop_does_not_leak_2026_into_earlier_cutoffs():
     ref = load_local_seasonal_reference(ROOT, as_of="2026-05-05")
     annual = annual_historical_reference(ref, "2026-05-05")
     assert "Progreso_2026" not in annual
-    assert annual.attrs["campaigns"] == "2023, 2025"
+    assert annual.attrs["campaigns"] == "2023, 2024, 2025"
 
 
 def test_no_forecast_trace_when_weather_ends_at_cutoff(reference):

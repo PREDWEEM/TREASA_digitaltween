@@ -92,7 +92,7 @@ def test_reference_availability_never_uses_future_totals_or_future_years():
     assert local_2023.Campanas_Anos.eq("2023").all()
     assert "Progreso_2025" not in local_2023 and "Progreso_2026" not in local_2023
     early_2026 = load_local_seasonal_reference(ROOT, "2026-09-15")
-    assert early_2026.Campanas_Anos.eq("2023, 2025").all()
+    assert early_2026.Campanas_Anos.eq("2023, 2024, 2025").all()
     assert "Progreso_2026" not in early_2026
     current = load_local_seasonal_reference(ROOT, "2026-09-16")
-    assert current.Campanas_Anos.eq("2023, 2025, 2026").all()
+    assert current.Campanas_Anos.eq("2023, 2024, 2025, 2026").all()

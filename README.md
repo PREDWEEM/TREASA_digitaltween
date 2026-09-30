@@ -99,45 +99,85 @@ del motor original. La fuente meteorológica operativa corresponde a INTA
 Barrow, −38,388, −60,346. Ambas ubicaciones se documentan por separado.
 
 Para series parciales se utiliza un pool exclusivamente local de
-**Tres Arroyos 2023, 2025 y 2026**, construido con:
+**Tres Arroyos 2023, 2024, 2025 y 2026**, construido con:
 
 | Campaña | Fuente | Alcance |
 |---|---|---|
 | 2023 | `data/reference/tres_arroyos_2023_counts.csv` | 29 visitas del 27/02 al 09/10, cinco réplicas y promedio en plantas/m² |
+| 2024 | `data/reference/tres_arroyos_2024_counts.csv` | 10 conteos promedio del 15/02 al 30/07, total 7.946,67 plantas/m² |
 | 2025 | `test -emerel tresas 2025.xlsx` | Curva procesada del clasificador original |
 | 2026 | `data/calibration/tres_arroyos_2026_counts.csv` | 17 registros del 05/02 al 16/09, total 12.089,67 plantas/m² |
 
 Cada curva de conteos usa **suma acumulada de PLM2 / suma de PLM2 registrada**.
 Se interpola el acumulado entre visitas, preservando la masa de cada intervalo.
 Cada campaña tiene el mismo peso en los cuantiles, sin ponderar por densidad,
-número de fechas o cantidad de réplicas. La mediana de tres campañas no es
-su media aritmética. Tanto el histórico del gráfico como el ancla de la
+número de fechas o cantidad de réplicas. La mediana del pool no es
+el promedio aritmético de todos los años. Tanto el histórico del gráfico como el ancla de la
 normalización y el máximo semanal del semáforo se obtienen del mismo pool.
 
 **Disponibilidad temporal:** 2023 desde el último conteo del 09/10/2023;
+2024 desde el último conteo del 30/07/2024;
 2025 desde el 01/01/2026 como referencia previa a la campaña operativa;
 2026 desde el 16/09/2026. Las revisiones de 2026 anteriores al 16/09 usan
-2023 y 2025. Desde el 16/09, y para el calendario de referencia 2027,
-participan los tres años. Esta incorporación ocurrió el 30/09/2026: una
+2023, 2024 y 2025. Desde el 16/09, y para el calendario de referencia 2027,
+participan los cuatro años. Esta incorporación ocurrió el 30/09/2026: una
 revisión pasada no reproduce la información efectivamente cargada entonces.
 Se conservan las exclusiones de 2010, 2015, Balcarce, San Pedro y todas las
-curvas del clasificador salvo Tres Arroyos 2025. La curva genérica `2023.xlsx`
-del clasificador continúa excluida: la nueva referencia usa el adjunto local.
+curvas del clasificador salvo Tres Arroyos 2025. Las curvas genéricas
+`2023.xlsx` y `2024.xlsx` del clasificador continúan excluidas: las nuevas
+referencias utilizan exclusivamente los adjuntos locales de Tres Arroyos.
 
-Antes del 27/02, 2023 permanece desconocido; antes del 05/02 sucede lo mismo
-con 2026. El resumen usa las curvas disponibles en cada día y conserva su
+Antes del 27/02, 2023 permanece desconocido; antes del 15/02 sucede lo mismo
+con 2024 y antes del 05/02 con 2026. El resumen usa las curvas disponibles en cada día y conserva su
 máximo acumulado para evitar retrocesos cuando cambia el número de campañas.
-La tabla incluye los cuantiles `Empirico` sin esa regularización y las tres
+La tabla incluye los cuantiles `Empirico` sin esa regularización y las cuatro
 curvas individuales para auditoría. Tras el último conteo se mantiene el total
 de la ventana como supuesto de normalización, sin certificar cierre biológico
 ni agotamiento del banco de semillas. El eje de referencia conserva los datos
 hasta el 09/10; el gráfico principal sigue recortado al **01/10**.
 
-Tres campañas aportan contexto local, pero sus P10 y P90 son descripciones,
+Cuatro campañas aportan contexto local, pero sus P10 y P90 son descripciones,
 no intervalos de confianza ni probabilidades robustas. El pool cambia el ancla
 del denominador estacional; no reentrena la ANN ni modifica el flujo sin
 normalizar o el reloj térmico. Las revisiones de campañas incluidas en el pool
 son retrospectivas y no demuestran precisión predictiva independiente.
+
+### Fuentes incorporadas de 2024
+
+- `tres_arroyos_2024_counts_original.xlsx`: copia íntegra de **emergencia 2024.xlsx**,
+  hoja Hoja1, FECHA y pl.m2 en A2:B11. Los diez valores son promedios de nacimientos
+  por visita/intervalo, del **15/02 al 30/07/2024**, y suman **7.946,67 plantas/m²**.
+  No se aportan réplicas individuales: no se calcula ni inventa SD/EE.
+- `tres_arroyos_2024_weather_original.csv`: copia íntegra de **meteo TRES ARROYOS 2024.csv**,
+  separador punto y coma y decimal coma. El CSV extraído contiene **335 fechas
+  consecutivas del 01/01 al 30/11/2024**, con TMAX, TMIN y precipitación completas.
+  Se excluyen del procesamiento **23.370 filas sin fecha** (885 vacías y 22.485
+  con sólo precipitación); se conservan en el original y se documenta su exclusión.
+  No se asignan a fechas, no se suman ni se imputan datos. Estación no informada.
+- `tres_arroyos_2024_source.json`: procedencia, ventanas, unidades, limpieza,
+  limitaciones y hashes de originales y CSV. La meteorología asociada se archiva
+  para análisis históricos; no reemplaza la meteorología operativa ni se necesita
+  para construir el acumulado observado. Los conteos no se cargan como observaciones
+  de la campaña actual y no se ajusta una nueva calibración 2024.
+
+El primer conteo es **346,67 plantas/m² (4,36 % del total)** y no tiene inicio
+conocido. Se conserva sin cero inicial inventado y se aplica el mismo criterio
+para cambios de composición y semanas parciales que en 2023. Mantener el 100 %
+después del 30/07 es un supuesto de referencia: no demuestra ausencia de
+nacimientos posteriores ni que la campaña haya finalizado biológicamente.
+
+**Calendario bisiesto:** las curvas se alinean por mes/día, con una coordenada
+común no bisiesta. El conteo real del **29/02/2024** se conserva en `Julian_days=59.5`,
+entre 28/02 (59) y 01/03 (60); marzo–diciembre no se desplazan un día. La
+interpolación se realiza en ese calendario común. En años no bisiestos no se
+crea una fecha 29/02: su incremento queda integrado en el intervalo al 01/03.
+En años bisiestos el punto se muestra el 29/02. El ancla operativa y los gráficos
+utilizan esta misma correspondencia. `Julian_days` es aquí una coordenada del
+pool, no el ordinal real de 2024; las fechas originales se mantienen intactas.
+
+Extracción reproducible: `python scripts/import_reference_2024.py`.
+Los CSV y la procedencia se pueden descargar en
+**Trazabilidad → Fuentes de Tres Arroyos 2024**.
 
 ### Fuentes incorporadas de 2023
 
@@ -214,7 +254,7 @@ El eje del flujo y los cuadros al pasar el cursor muestran explícitamente `%`
 para las dos series. Los valores menores del histórico no son proporciones sin
 convertir: la interpolación entre visitas y la combinación de campañas suavizan
 sus picos respecto de una trayectoria con pulsos diarios concentrados.
-Las campañas 2023, 2025 y 2026 siguen formando parte del pool cuando corresponde por
+Las campañas 2023, 2024, 2025 y 2026 siguen formando parte del pool cuando corresponde por
 fecha, pero no se dibujan como curvas individuales. Sus datos siguen
 disponibles en Trazabilidad. El resumen conserva los supuestos de normalización
 descritos arriba.
@@ -258,7 +298,7 @@ El índice puede superar el 100 %; no es una probabilidad ni un umbral de daño 
 Ambos flujos se comparan en la misma escala fraccional (o ambos en porcentaje),
 conservando sus respectivos denominadores: total de las ventanas históricas
 y total estacional estimado del gemelo. Se mantienen los criterios de disponibilidad
-de campañas: 2023 y 2025 en cortes de 2026 anteriores al 16/09; los tres años desde esa fecha.
+de campañas: 2023, 2024 y 2025 en cortes de 2026 anteriores al 16/09; los cuatro años desde esa fecha.
 
 El horizonte futuro es móvil desde la fecha elegida, por lo que puede abarcar
 partes de dos barras de semanas calendario. El selector Diario/Semanal no cambia
@@ -279,9 +319,9 @@ pero no altera la campaña meteorológica operativa, cuyo cierre continúa siend
 y disponer de su meteorología. Las pruebas del gráfico usan series sintéticas;
 no constituyen un pronóstico real de 2027.
 
-El perfil adicional 2026 se regeneró con una huella que incluye la nueva fuente
-2023. El ajuste al cierre utiliza los tres años; sus evaluaciones temporales
-anteriores al 16/09 usan 2023 y 2025. Se conservan la ANN, los parámetros
+El perfil adicional 2026 se regeneró con una huella que incluye las fuentes
+2023 y 2024 y la alineación del calendario. El ajuste al cierre utiliza los cuatro años; sus evaluaciones temporales
+anteriores al 16/09 usan 2023, 2024 y 2025. Se conservan la ANN, los parámetros
 fisiológicos y los conteos y la meteorología de ajuste 2026. Las métricas
 actualizadas de la evaluación retrospectiva aparecen a continuación.
 
@@ -338,10 +378,10 @@ muestreo medido.
 | Evaluación | RMSE base | RMSE calibrado |
 |---|---:|---:|
 | Ajuste retrospectivo, 16 intervalos | 1.082,79 | 383,20 |
-| Evaluación temporal, 10 intervalos posteriores | 668,38 | 620,79 |
+| Evaluación temporal, 10 intervalos posteriores | 692,35 | 509,50 |
 
 RMSE en plantas/m² por intervalo. La reducción es del 64,6 % en el ajuste y
-del 7,1 % en la evaluación temporal; mejoran 4 de 10 intervalos posteriores.
+del 26,4 % en la evaluación temporal; mejoran 4 de 10 intervalos posteriores.
 El perfil es **experimental**: un parámetro alcanza su límite, sólo se dispone
 de una campaña de ajuste y se usa meteorología realizada, no pronósticos
 archivados por emisión. Estos resultados no validan transferencia a otros

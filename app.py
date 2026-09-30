@@ -321,6 +321,12 @@ if seasonal_reference.attrs["source_2023"]["used"]:
         "total registrado 2.658,8 plantas/m². Antes del 27/02 su trayectoria es desconocida. "
         "La meteorología histórica conserva TMAX y TMIN faltantes el 17/06/2023."
     )
+if seasonal_reference.attrs["source_2024"]["used"]:
+    st.caption(
+        "2024: diez conteos promedio del 15/02 al 30/07; total registrado "
+        "7.946,7 plantas/m². Sin réplicas individuales ni cero inicial documentado. "
+        "Se conserva el conteo del 29/02 y se alinea el pool por mes y día."
+    )
 if not forecast_metadata["complete"]:
     st.warning(
         "El horizonte meteorológico está incompleto. La proyección muestra los días "
@@ -988,8 +994,9 @@ with tab_audit:
         st.dataframe(seasonal_reference, hide_index=True, width="stretch")
         st.caption(
             "Progreso entre 0 y 1. Se usan las campañas disponibles para cada día. "
-            "2023 comienza el 27/02 con 570 plantas/m² acumuladas; se conserva ese dato "
-            "sin inventar un inicio de intervalo ni un pico diario. "
+            "2023 comienza el 27/02 con 570 plantas/m² acumuladas y 2024 el 15/02 "
+            "con 346,67 plantas/m². Se conservan sin inventar un inicio de intervalo ni un pico diario. "
+            "El eje común conserva mes/día: 29/02 ocupa la coordenada 59,5. "
             "El ancla conserva su máximo acumulado para evitar retrocesos al cambiar "
             "el número de curvas; los cuantiles originales figuran como Empirico. "
             "Después del último conteo se mantiene el total como supuesto de referencia, "
@@ -1019,6 +1026,30 @@ with tab_audit:
             ("tres_arroyos_2023_counts.csv", "Descargar conteos y réplicas 2023"),
             ("tres_arroyos_2023_weather.csv", "Descargar meteorología histórica 2023"),
             ("tres_arroyos_2023_source.json", "Descargar procedencia 2023"),
+        ):
+            st.download_button(label, (reference_dir / filename).read_bytes(), filename,
+                               "application/json" if filename.endswith(".json") else "text/csv")
+    with st.expander("Fuentes de Tres Arroyos 2024"):
+        reference_dir = BASE / "data/reference"
+        st.write("Diez conteos promedio · plantas/m² · 15/02–30/07/2024")
+        st.dataframe(pd.read_csv(reference_dir / "tres_arroyos_2024_counts.csv"),
+                     hide_index=True, width="stretch")
+        st.caption(
+            "Sólo se aportaron promedios; no se infieren réplicas ni errores de muestreo. "
+            "El 100 % corresponde al total registrado en esta ventana, sin certificar "
+            "el cierre biológico. Después del 30/07 se mantiene el total como supuesto orientativo. "
+            "Cada campaña tiene igual peso en el pool."
+        )
+        st.caption(
+            "Meteorología asociada: 335 días completos del 01/01 al 30/11/2024, incluido el 29/02. "
+            "Se excluyen 23.370 filas sin fecha: 885 vacías y 22.485 con sólo precipitación. "
+            "El archivo original se conserva íntegro. No se informó la estación. "
+            "La meteorología histórica no reemplaza la serie operativa."
+        )
+        for filename, label in (
+            ("tres_arroyos_2024_counts.csv", "Descargar conteos promedio 2024"),
+            ("tres_arroyos_2024_weather.csv", "Descargar meteorología histórica 2024"),
+            ("tres_arroyos_2024_source.json", "Descargar procedencia 2024"),
         ):
             st.download_button(label, (reference_dir / filename).read_bytes(), filename,
                                "application/json" if filename.endswith(".json") else "text/csv")

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "method": "monotone_logit_v1",
-  "profile_id": "tres arroyos-2026-09-16-v1-8019abcd8c",
+  "profile_id": "tres arroyos-2026-09-16-v1-45b153d435",
   "site": "Tres Arroyos",
   "status": "experimental_una_campana",
   "training_year": 2026,
@@ -17,18 +17,18 @@
     "n_observations": 17,
     "n_intervals": 16,
     "observed_window_total_plm2": 12089.666666666666,
-    "rmse_base_plm2": 1082.7876164147585,
-    "rmse_calibrated_plm2": 383.20033452905795,
+    "rmse_base_plm2": 1082.7876164147588,
+    "rmse_calibrated_plm2": 383.2003345290575,
     "weighted_mse_base": 1.4141479938356043,
-    "weighted_mse_calibrated": 0.17711692369197757,
+    "weighted_mse_calibrated": 0.17711692369197712,
     "regularization": 0.05,
-    "nuisance_scale_base": 12089.666666666673,
+    "nuisance_scale_base": 12089.66666666667,
     "nuisance_scale_calibrated": 12089.666666666666,
     "parameter_at_bound": true
   },
   "observations_start": "2026-02-05",
   "initial_zero_reference": true,
-  "model_fingerprint": "6e4f5843d1a660439716b3c23056b7b001905fa0bce05f474fb4246b7cd3c5fc",
+  "model_fingerprint": "3f30509d120f179f45c3c1e1f04a1d3bbc30708b6d250fd4a2b483b87c93f9e6",
   "model_parameters": {
     "cobertura_pct": 20.0,
     "w_max": 18.81,
@@ -65,9 +65,9 @@
       "san pedro"
     ],
     "excluded_campaigns": "2012.xlsx, 2009.xlsx, 2013.xlsx, 2024.xlsx, 2015.xlsx, 2023.xlsx, 2010.xlsx, 2014.xlsx, 2008.xlsx, 2011.xlsx, emererel2025 balcarce.xlsx, emrel sp 2025 san pedro.xlsx",
-    "scope": "Referencia local Tres Arroyos 2023, 2025, 2026",
-    "n_campaigns": 3,
-    "campaigns": "test -emerel tresas 2025.xlsx, tres_arroyos_2023_counts.csv, tres_arroyos_2026_counts.csv",
+    "scope": "Referencia local Tres Arroyos 2023, 2024, 2025, 2026",
+    "n_campaigns": 4,
+    "campaigns": "test -emerel tresas 2025.xlsx, tres_arroyos_2023_counts.csv, tres_arroyos_2024_counts.csv, tres_arroyos_2026_counts.csv",
     "source_2023": {
       "path": "data/reference/tres_arroyos_2023_counts.csv",
       "sha256": "6f8a2c1943c2f2113429edcd8322bd23bb465816bdf4cbf61f0b5e9e6675d449",
@@ -104,6 +104,46 @@
       "incorporated_on": "2026-09-30",
       "used": true
     },
+    "source_2024": {
+      "path": "data/reference/tres_arroyos_2024_counts.csv",
+      "sha256": "f538022bb711c77417dffe290a2515e8e68c8bbc039df1a73596d8d03b122305",
+      "start": "2024-02-15",
+      "end": "2024-07-30",
+      "sample_count": 10,
+      "window_total_plm2": 7946.666666666667,
+      "initial_zero_reference": false,
+      "processing": "acumulado / total registrado; interpolación lineal entre visitas",
+      "scope": "ventana registrada; no certifica el cierre biológico de la campaña",
+      "replicate_count": null,
+      "first_interval_start": null,
+      "source_file": "data/reference/tres_arroyos_2024_source.json",
+      "weather": {
+        "uploaded_name": "meteo TRES ARROYOS 2024.csv",
+        "original_file": "tres_arroyos_2024_weather_original.csv",
+        "original_sha256": "42d534e9863f59fe238af080ff204857c02c9ce73962f309c7ff49661dd5088a",
+        "file": "tres_arroyos_2024_weather.csv",
+        "sha256": "78e36167eaf65819928c94c5e4c45bc95f4927b02240213f08019faabd520d2f",
+        "delimiter": ";",
+        "decimal_separator": ",",
+        "source_rows": 23705,
+        "rows": 335,
+        "start": "2024-01-01",
+        "end": "2024-11-30",
+        "excluded_undated_rows": 23370,
+        "excluded_empty_rows": 885,
+        "excluded_precipitation_only_rows": 22485,
+        "exclusion_note": "Filas sin fecha no se asignan a días ni se suman; permanecen íntegramente en el CSV original.",
+        "temperature_units": "°C",
+        "precipitation_units": "mm",
+        "station": null,
+        "station_note": "El adjunto no identifica estación ni coordenadas.",
+        "missing_temperature_dates": [],
+        "imputation": "ninguna; registros fechados completos",
+        "role": "archivo histórico asociado; no reemplaza meteorología operativa ni calcula la curva observada"
+      },
+      "incorporated_on": "2026-09-30",
+      "used": true
+    },
     "source_2026": {
       "path": "data/calibration/tres_arroyos_2026_counts.csv",
       "sha256": "9f0d85dda74dabc48bdc2e4f4390b7c6a537dfd22e8ef7a3a27fab1540fd45b6",
@@ -116,7 +156,7 @@
       "scope": "ventana registrada; no certifica el cierre biológico de la campaña",
       "used": true
     },
-    "availability_rule": "2023 desde 09/10/2023; 2025 desde 01/01/2026; 2026 desde 16/09/2026, sin totales futuros"
+    "availability_rule": "2023 desde 09/10/2023; 2024 desde 30/07/2024; 2025 desde 01/01/2026; 2026 desde 16/09/2026, sin totales futuros"
   },
   "source": {
     "uploaded_filename": "VALIDA (1) (4)(2).xlsx",
@@ -172,8 +212,8 @@
     "independent_season": false,
     "n_intervals": 10,
     "note": "Ajuste con datos hasta cada corte y evaluación del siguiente intervalo. Se utiliza meteorología SIGA observada y ECMWF provisional, no la emisión de pronóstico disponible en cada corte. No demuestra transferencia a otra campaña ni precisión operativa a siete días.",
-    "rmse_base_plm2": 668.3822772895081,
-    "rmse_calibrated_plm2": 620.7867858137839,
+    "rmse_base_plm2": 692.3501667982432,
+    "rmse_calibrated_plm2": 509.49723635658484,
     "intervals_improved": 4
   },
   "limitations": [
@@ -182,7 +222,7 @@
     "Cobertura de 20 % y Wmax de 18.81 mm son supuestos de la configuración operativa; el archivo no informa manejo ni cobertura.",
     "El archivo FECHA + PLM2 no incluye repeticiones. Se utiliza un piso de ponderación común, no un error de muestreo medido.",
     "Se conserva el techo del 50 % y decaimiento desde el 15/04 del motor Tres Arroyos. No se incorpora extinción post-pico de otra localidad.",
-    "La referencia reúne 2023, 2025 y 2026 con igual peso por campaña; sus percentiles son descriptivos. Los cortes 2026 anteriores al 16/09 utilizan 2023 y 2025. El primer intervalo de 2023 no tiene inicio documentado.",
+    "La referencia reúne 2023, 2024, 2025 y 2026 con igual peso por campaña; sus percentiles son descriptivos. Los cortes 2026 anteriores al 16/09 utilizan 2023, 2024 y 2025. Los primeros intervalos de 2023 y 2024 no tienen inicio documentado. El calendario común conserva mes/día y el conteo del 29/02/2024.",
     "La meteorología del ajuste incluye un dato ECMWF provisional el 16/09/2026; los demás días son observaciones SIGA–INTA Barrow.",
     "La transformación no crea cohortes en fechas bloqueadas por el motor biofísico.",
     "Un parámetro en su límite indica que persisten diferencias estructurales.",

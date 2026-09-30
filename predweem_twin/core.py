@@ -370,7 +370,7 @@ def run_predweem(
             total = seasonal_total
             normalization_mode = normalization_metadata["mode"]
         p10, median, p90 = reference_progress(
-            seasonal_reference, df["Julian_days"].to_numpy(float)
+            seasonal_reference, df["Julian_days"].to_numpy(float), dates=df["Fecha"]
         )
         df["Progreso_Estacional_P10"] = p10
         df["Progreso_Estacional_Referencia"] = median
