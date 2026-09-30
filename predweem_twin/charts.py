@@ -102,6 +102,7 @@ def trajectory_charts(
     upper_thermal_time=800.0,
     seasonal_reference=None,
     flow_frequency="Diario",
+    onset_notice=None,
 ):
     if flow_frequency not in ("Diario", "Semanal"):
         raise ValueError("La frecuencia del flujo debe ser Diario o Semanal.")
@@ -335,5 +336,33 @@ def trajectory_charts(
         title_text=f"Flujo {flow_frequency.lower()} (% del total)",
         ticksuffix=" %", rangemode="tozero",
     )
+    if onset_notice and onset_notice.get("enabled") and onset_notice.get("monitoring_alert_date"):
+        monitoring_date = pd.Timestamp(onset_notice["monitoring_alert_date"])
+        if (
+            onset_notice.get("status") in {"watch", "started", "observed"}
+            and year_start <= monitoring_date <= min(cutoff, display_end)
+        ):
+            # X es el día exacto, no el lunes ni el centro de su barra semanal.
+            # La punta queda sobre el calendario y la flecha es vertical.
+            daily_figure.add_annotation(
+                name="initial_monitoring_alert",
+                x=monitoring_date.timestamp() * 1000, xref="x",
+                y=0, yref="paper", ax=0, ay=-245,
+                axref="pixel", ayref="pixel", showarrow=True,
+                arrowhead=2, arrowsize=1.3, arrowwidth=2.5,
+                arrowcolor="#6d28d9", standoff=0,
+                text=("<b>Alerta inicial de monitoreo</b><br>"
+                      f"{monitoring_date:%d/%m/%Y} · estimada"),
+                font=dict(color="#5b21b6", size=11),
+                bgcolor="rgba(255,255,255,.96)",
+                bordercolor="#6d28d9", borderwidth=1, borderpad=5,
+                xanchor=("left" if monitoring_date < year_start + pd.Timedelta(days=20)
+                         else "right" if monitoring_date > display_end - pd.Timedelta(days=30)
+                         else "center"),
+                hovertext=("Inicio modelado menos siete días. La fecha se recalcula con "
+                           "la información disponible y no acredita una alerta emitida ese día. "
+                           "El reloj térmico conserva su origen en el primer pico modelado."),
+                captureevents=True,
+            )
     cumulative_figure.update_yaxes(title_text="Emergencia acumulada (%)", range=[0, 105])
     return daily_figure, cumulative_figure

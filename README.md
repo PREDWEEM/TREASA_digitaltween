@@ -93,6 +93,16 @@ emisiones posteriores al corte se identifican explícitamente. No equivalen a
 pronósticos emitidos anticipadamente. La ausencia de señal no descarta nacimientos.
 El detalle queda en Trazabilidad y en el estado guardado (`onset_alert`).
 
+El gráfico de flujo muestra una **flecha vertical violeta** sobre el día exacto
+de la alerta inicial de monitoreo: **inicio modelado menos siete días**, con
+etiqueta `DD/MM/AAAA · estimada`. Se conserva al alternar entre flujo semanal y
+diario, sin moverla al lunes o al centro de una semana. Esta referencia se
+recalcula con el inicio disponible al corte; no acredita que se haya emitido
+un aviso en esa fecha. Su valor queda en `onset_alert.monitoring_alert_date`.
+Si aún no hay inicio modelado en el horizonte, la alerta está desactivada o
+la fecha cae fuera del calendario visible, no se dibuja la flecha.
+El origen del reloj térmico sigue siendo el primer pico modelado.
+
 ### Parámetros fisiológicos
 
 La configuración inicial conserva cobertura 20 %, Wmax 18,81 mm, exponente Kr=0,

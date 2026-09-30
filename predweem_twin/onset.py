@@ -21,6 +21,7 @@ def onset_alert(trajectory, as_of, observations=None, enabled=True) -> dict:
         enabled=bool(enabled), horizon_days=7, status="disabled", level="info",
         title="Alerta preventiva de inicio desactivada", message="",
         model_onset_date=None, first_positive_date=None,
+        monitoring_alert_date=None,
         forecast_days_available=0, mode="Sin datos",
     )
     if not enabled:
@@ -33,6 +34,10 @@ def onset_alert(trajectory, as_of, observations=None, enabled=True) -> dict:
         reached = frame.loc[frame["Primer_Pico_Habilitado"].eq(True), "Fecha"]
         if not reached.empty:
             result["model_onset_date"] = reached.iloc[0].date().isoformat()
+            # Referencia gráfica calculada, no registro de una emisión pasada.
+            result["monitoring_alert_date"] = (
+                reached.iloc[0] - pd.Timedelta(days=7)
+            ).date().isoformat()
 
     if observations is not None and not observations.empty:
         dates = pd.to_datetime(observations["Fecha"], errors="coerce").dt.tz_localize(None).dt.normalize()

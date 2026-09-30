@@ -476,11 +476,17 @@ with tab_state:
         parameters.tt_limite,
         seasonal_reference=seasonal_reference,
         flow_frequency=flow_frequency,
+        onset_notice=snapshot["onset_alert"],
     )
     daily_column, cumulative_column = st.columns(2)
     with daily_column:
         st.subheader(f"Flujo {flow_frequency.lower()} de emergencia")
         st.plotly_chart(daily_figure, width="stretch", key="daily_emergence_chart")
+        if any(item.name == "initial_monitoring_alert" for item in daily_figure.layout.annotations):
+            st.caption(
+                "Flecha violeta: inicio modelado menos 7 días. Es una fecha estimada de monitoreo; "
+                "no confirma que el aviso se haya emitido ese día."
+            )
         st.caption(
             f"Ambas barras usan la misma escala: % del total por {'semana' if flow_frequency == 'Semanal' else 'día'} "
             "(2 % = +2 puntos porcentuales del acumulado). "
