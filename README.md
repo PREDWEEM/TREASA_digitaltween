@@ -466,3 +466,25 @@ Las pruebas comparan el motor con una extracción independiente del original y
 verifican datos adjuntos, perfil reproducible, cortes temporales, calibración,
 asimilación, cobertura, almacenamiento, fuentes y cierre meteorológico.
 Se ejecutan automáticamente en GitHub Actions.
+
+
+## Disponibilidad operativa de porcentajes (01/10/2026)
+
+**Normalización inicial:** el ancla usa exclusivamente el último estado hasta
+la fecha de corte. Nunca se busca un ancla en los días futuros ni se utiliza el
+total del período parcial como sustituto estacional. Se requiere señal
+acumulada mayor a 1e-12 y progreso mediano histórico mayor al 1%. Si falta esa
+información se muestra **“porcentaje aún no estimable”**: acumulado, remanente,
+flujos porcentuales, potencial y densidades modeladas quedan sin estimar.
+Esto no equivale a cero ni a intensidad Nula. La alerta inicial y el tiempo
+térmico siguen utilizando el motor biofísico original; el histórico permanece
+visible como orientación. Al extender el pronóstico no cambia el porcentaje
+del pasado para un mismo corte y referencia.
+
+Los conteos pueden cargarse y conservarse en plantas/m² mientras la asimilación
+porcentual está pendiente. Cuando existe una normalización válida se vuelven a
+utilizar esos conteos originales. La base SQLite admite porcentaje nulo para
+estos registros y migra automáticamente las tablas previas conservando sus
+filas. Los CSV exportan el indicador `Normalizacion_Disponible` y el motivo.
+La llamada al motor **sin fecha de corte** conserva el cálculo retrospectivo
+por total del período para diagnósticos; no es la ruta operativa de la app.
