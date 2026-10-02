@@ -171,7 +171,7 @@ def build_calibration(observations_path, weather_path, output_path, site="Tres A
             initial_note,
             f"Cobertura de {coverage:g} % y Wmax de {w_max:g} mm son supuestos de la configuración operativa; el archivo no informa manejo ni cobertura.",
             "El archivo FECHA + PLM2 no incluye repeticiones. Se utiliza un piso de ponderación común, no un error de muestreo medido.",
-            "Se conserva el techo del 50 % y decaimiento desde el 15/04 del motor Tres Arroyos. No se incorpora extinción post-pico de otra localidad.",
+            "Se aplican las reglas v2 (termoinhibición 26 °C, choque hídrico 60 mm con piso 0,5 y techo del 10 % con decaimiento desde el 15/04, condicionado a la señal previa) del motor Tres Arroyos. No se incorpora extinción post-pico de otra localidad.",
             "La referencia reúne 2023, 2024, 2025 y 2026 con igual peso por campaña; sus percentiles son descriptivos. Los cortes 2026 anteriores al 16/09 utilizan 2023, 2024 y 2025. Los primeros intervalos de 2023 y 2024 no tienen inicio documentado. El calendario común conserva mes/día y el conteo del 29/02/2024.",
             "La meteorología del ajuste incluye un dato ECMWF provisional el 16/09/2026; los demás días son observaciones SIGA–INTA Barrow.",
             "La transformación no crea cohortes en fechas bloqueadas por el motor biofísico.",

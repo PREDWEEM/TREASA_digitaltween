@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "method": "monotone_logit_v1",
-  "profile_id": "tres arroyos-2026-09-16-v1-45b153d435",
+  "profile_id": "tres arroyos-2026-09-16-v1-71b2d517be",
   "site": "Tres Arroyos",
   "status": "experimental_una_campana",
   "training_year": 2026,
@@ -10,35 +10,35 @@
   "season_complete": false,
   "first_interval_excluded": true,
   "parameters": {
-    "offset": 0.7000000000000002,
+    "offset": -0.34999999999999987,
     "slope": 1.6
   },
   "fit": {
     "n_observations": 17,
     "n_intervals": 16,
     "observed_window_total_plm2": 12089.666666666666,
-    "rmse_base_plm2": 1082.7876164147588,
-    "rmse_calibrated_plm2": 383.2003345290575,
-    "weighted_mse_base": 1.4141479938356043,
-    "weighted_mse_calibrated": 0.17711692369197712,
+    "rmse_base_plm2": 682.4490719281288,
+    "rmse_calibrated_plm2": 158.12607824093575,
+    "weighted_mse_base": 0.5617573925987752,
+    "weighted_mse_calibrated": 0.030158886385234764,
     "regularization": 0.05,
-    "nuisance_scale_base": 12089.66666666667,
+    "nuisance_scale_base": 12089.666666666668,
     "nuisance_scale_calibrated": 12089.666666666666,
     "parameter_at_bound": true
   },
   "observations_start": "2026-02-05",
   "initial_zero_reference": true,
-  "model_fingerprint": "eacde580a6e740fa0593d3d1c2ba36296c53fe2779c831479c23f762468891c0",
+  "model_fingerprint": "38c21730d3f722fb2f663746092833b89f2f31436e237c333e89ca4df9d5026a",
   "model_parameters": {
     "cobertura_pct": 20.0,
     "w_max": 18.81,
-    "umbral_termoinhibicion": 24.0,
-    "umbral_choque_hidrico": 45.0,
+    "umbral_termoinhibicion": 26.0,
+    "umbral_choque_hidrico": 60.0,
     "exponente_kr": 0.0,
     "latitud": -38.45,
     "longitud": -60.2763,
     "latencia_jd": 25,
-    "techo_choque": 0.75,
+    "techo_choque": 0.5,
     "calentamiento_suelo": 0.0,
     "umbral_primer_pico": 0.2,
     "t_base": 2.0,
@@ -47,10 +47,13 @@
     "tt_control": 600.0,
     "tt_limite": 800.0,
     "decay_enabled": true,
-    "decay_tau_days": 60.0,
+    "decay_tau_days": 40.0,
     "decay_beta": 1.0,
     "decay_intensity": 0.75,
-    "decay_cap_fraction": 0.5
+    "decay_cap_fraction": 0.1,
+    "decay_requiere_senal_previa": true,
+    "decay_umbral_senal_previa": 0.5,
+    "decay_min_dias_senal_previa": 1
   },
   "seasonal_reference": {
     "include_patterns": [
@@ -212,8 +215,8 @@
     "independent_season": false,
     "n_intervals": 10,
     "note": "Ajuste con datos hasta cada corte y evaluación del siguiente intervalo. Se utiliza meteorología SIGA observada y ECMWF provisional, no la emisión de pronóstico disponible en cada corte. No demuestra transferencia a otra campaña ni precisión operativa a siete días.",
-    "rmse_base_plm2": 692.3501667982432,
-    "rmse_calibrated_plm2": 509.49723635658484,
+    "rmse_base_plm2": 114.56890297571411,
+    "rmse_calibrated_plm2": 444.968008591051,
     "intervals_improved": 4
   },
   "limitations": [
@@ -221,23 +224,12 @@
     "El registro inicial de cero del 2026-02-05 delimita el primer intervalo; no se infiere ausencia de emergencia en fechas anteriores.",
     "Cobertura de 20 % y Wmax de 18.81 mm son supuestos de la configuración operativa; el archivo no informa manejo ni cobertura.",
     "El archivo FECHA + PLM2 no incluye repeticiones. Se utiliza un piso de ponderación común, no un error de muestreo medido.",
-    "Se conserva el techo del 50 % y decaimiento desde el 15/04 del motor Tres Arroyos. No se incorpora extinción post-pico de otra localidad.",
+    "Se aplican las reglas v2 (termoinhibición 26 °C, choque hídrico 60 mm con piso 0,5 y techo del 10 % con decaimiento desde el 15/04, condicionado a la señal previa) del motor Tres Arroyos. No se incorpora extinción post-pico de otra localidad.",
     "La referencia reúne 2023, 2024, 2025 y 2026 con igual peso por campaña; sus percentiles son descriptivos. Los cortes 2026 anteriores al 16/09 utilizan 2023, 2024 y 2025. Los primeros intervalos de 2023 y 2024 no tienen inicio documentado. El calendario común conserva mes/día y el conteo del 29/02/2024.",
     "La meteorología del ajuste incluye un dato ECMWF provisional el 16/09/2026; los demás días son observaciones SIGA–INTA Barrow.",
     "La transformación no crea cohortes en fechas bloqueadas por el motor biofísico.",
     "Un parámetro en su límite indica que persisten diferencias estructurales.",
     "El ajuste no reduce automáticamente la incertidumbre de asimilación.",
     "Los gráficos de la campaña de ajuste son retrospectivos, no predicciones independientes."
-  ],
-  "normalization_revision": {
-    "date": "2026-10-01",
-    "previous_model_fingerprint": "3f30509d120f179f45c3c1e1f04a1d3bbc30708b6d250fd4a2b483b87c93f9e6",
-    "verification": "Reproducido el ajuste en la fecha de cierre original; parámetros y errores de ajuste sin cambios. La disponibilidad operativa ya no se sustituye por cero.",
-    "parameters_unchanged": true,
-    "fit_metrics_unchanged": true,
-    "metrics_checked": [
-      "rmse_base_plm2",
-      "rmse_calibrated_plm2"
-    ]
-  }
+  ]
 }
