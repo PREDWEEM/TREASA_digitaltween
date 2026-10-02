@@ -106,13 +106,15 @@ El origen del reloj térmico sigue siendo el primer pico modelado.
 ### Parámetros fisiológicos
 
 La configuración inicial conserva cobertura 20 %, Wmax 18,81 mm, exponente Kr=0,
-latencia JD 25, termoinhibición de cinco días a 24 °C y primer pico mayor que 0,20.
-El choque hídrico usa 45 mm en tres días, hasta JD 110, con piso de emergencia
-0,75 antes de aplicar los filtros hídricos. La ANN utiliza temperatura del aire;
+latencia JD 25, termoinhibición de cinco días a 26 °C y primer pico mayor que 0,20.
+El choque hídrico usa 60 mm en tres días, hasta JD 110, con piso de emergencia
+0,5 antes de aplicar los filtros hídricos (reglas v2; antes 24 °C, 45 mm y 0,75). La ANN utiliza temperatura del aire;
 la cobertura modifica Ke y el balance hídrico.
 
-Desde el 15/04 aplica un techo del 50 % del máximo previo, con decaimiento
-τ=60 días, β=1 e intensidad 0,75. Se conserva el reloj térmico triangular
+Desde el 15/04 aplica un techo del 10 % del máximo previo, con decaimiento
+τ=40 días, β=1 e intensidad 0,75, sólo si el modelo registró antes del 15/04
+al menos un día con flujo ≥0,5 (reglas v2; antes 50 % y τ=60 d sin condición;
+`ModelParameters.legacy()` los restaura). Se conserva el reloj térmico triangular
 2–20–30 °C y la banda de manejo 600–800 °Cd.
 
 El indicador **TT desde primer pico** muestra el tiempo térmico y un semáforo:
