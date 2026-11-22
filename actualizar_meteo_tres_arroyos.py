@@ -32,20 +32,35 @@ import numpy as np
 import pandas as pd
 import requests
 
+from campaign import CAMPAIGN_YEAR, campaign_bounds, campaign_file
+
 
 LATITUD = float(os.getenv("LATITUD", "-38.388"))
 LONGITUD = float(os.getenv("LONGITUD", "-60.346"))
 ZONA_HORARIA = "America/Argentina/Buenos_Aires"
 
-CAMPANIA_START = date(2026, 1, 1)
-CAMPANIA_END = date(2026, 10, 1)  # Última fecha meteorológica, inclusive.
 HORIZONTE_DIAS = 7
+TOLERANCIA_INICIO_SIGA_DIAS = 10
 TBASE = 2.0
 
-ARCHIVO_MAESTRO_DEFAULT = Path("meteo_daily.csv")
-ARCHIVO_SIGA_CACHE = Path("data/siga_tres_arroyos_observado.csv")
+ARCHIVO_MAESTRO_BASE = Path("meteo_daily.csv")
+ARCHIVO_SIGA_BASE = Path("data/siga_tres_arroyos_observado.csv")
 DIRECTORIO_PRONOSTICOS = Path("data/historico_pronosticos")
-ARCHIVO_ESTADO = Path("data/estado_actualizacion_meteo.json")
+ARCHIVO_ESTADO_BASE = Path("data/estado_actualizacion_meteo.json")
+
+
+def configurar_campania(anio: int) -> None:
+    """Fija fechas y archivos de la campaña; 2026 conserva sus archivos originales."""
+    global CAMPANIA_ANIO, CAMPANIA_START, CAMPANIA_END
+    global ARCHIVO_MAESTRO_DEFAULT, ARCHIVO_SIGA_CACHE, ARCHIVO_ESTADO
+    CAMPANIA_START, CAMPANIA_END = campaign_bounds(anio)  # Cierre inclusivo.
+    CAMPANIA_ANIO = int(anio)
+    ARCHIVO_MAESTRO_DEFAULT = campaign_file(ARCHIVO_MAESTRO_BASE, anio)
+    ARCHIVO_SIGA_CACHE = campaign_file(ARCHIVO_SIGA_BASE, anio)
+    ARCHIVO_ESTADO = campaign_file(ARCHIVO_ESTADO_BASE, anio)
+
+
+configurar_campania(CAMPAIGN_YEAR)
 
 SIGA_ARCHIVO_LOCAL = Path(os.getenv("SIGA_LOCAL_FILE", "NH0216.xls"))
 SIGA_URL_TEMPLATE = os.getenv("SIGA_DOWNLOAD_URL", "").strip()
@@ -910,21 +925,49 @@ def validar_serie_final(df: pd.DataFrame, fecha_final: date) -> None:
                 )
 
 
+def siga_en_tolerancia_inicial(ayer: date) -> bool:
+    """Primeros días de campaña: SIGA puede no publicar aún el año nuevo."""
+    return (ayer - CAMPANIA_START).days < TOLERANCIA_INICIO_SIGA_DIAS
+
+
+def obtener_observaciones_campania(
+    ayer: date,
+    siga_file: Path | None = None,
+) -> tuple[pd.DataFrame, str]:
+    if ayer < CAMPANIA_START:
+        # Primer día de campaña: todavía no hay fechas vencidas que observar.
+        return asegurar_columnas(pd.DataFrame()), "sin_fechas_vencidas"
+    try:
+        observaciones, estado_siga = obtener_siga_dataframe(
+            CAMPANIA_START,
+            ayer,
+            archivo_forzado=siga_file,
+        )
+    except RuntimeError as error:
+        if not siga_en_tolerancia_inicial(ayer):
+            raise
+        print(f"⚠️ SIGA sin datos al inicio de campaña; se usa ECMWF provisional: {error}")
+        return asegurar_columnas(pd.DataFrame()), "SIGA_no_disponible_inicio_campania"
+    if observaciones.empty and not siga_en_tolerancia_inicial(ayer):
+        raise ValueError("SIGA no aportó ninguna observación válida.")
+    return observaciones, estado_siga
+
+
 def construir_meteo_daily(
-    output: Path = ARCHIVO_MAESTRO_DEFAULT,
+    output: Path | None = None,
     siga_file: Path | None = None,
 ) -> pd.DataFrame:
+    output = Path(output) if output is not None else ARCHIVO_MAESTRO_DEFAULT
     hoy = hoy_argentina()
     ayer = min(hoy - timedelta(days=1), CAMPANIA_END)
 
-    observaciones, estado_siga = obtener_siga_dataframe(
-        CAMPANIA_START,
-        ayer,
-        archivo_forzado=siga_file,
-    )
-    ultima_observacion = validar_continuidad_observada(observaciones)
-
-    provisional_desde = ultima_observacion + timedelta(days=1)
+    observaciones, estado_siga = obtener_observaciones_campania(ayer, siga_file)
+    if observaciones.empty:
+        ultima_observacion = None
+        provisional_desde = CAMPANIA_START
+    else:
+        ultima_observacion = validar_continuidad_observada(observaciones)
+        provisional_desde = ultima_observacion + timedelta(days=1)
     provisionales = cargar_provisional_ecmwf(provisional_desde, ayer)
 
     pronostico = cargar_pronostico_ecmwf()
@@ -970,7 +1013,10 @@ def construir_meteo_daily(
         "latitud": LATITUD,
         "longitud": LONGITUD,
         "estado_siga": estado_siga,
-        "ultima_observacion_siga": ultima_observacion.isoformat(),
+        "ultima_observacion_siga": (
+            ultima_observacion.isoformat() if ultima_observacion else None
+        ),
+        "campania": CAMPANIA_ANIO,
         "fuente_provisional": (
             "ECMWF_IFS_HISTORICO" if not provisionales.empty else None
         ),
@@ -1032,8 +1078,14 @@ def main() -> int:
     )
     parser.add_argument(
         "--output",
-        default=str(ARCHIVO_MAESTRO_DEFAULT),
-        help="Archivo de salida CSV.",
+        default=None,
+        help="Archivo de salida CSV (por defecto, el de la campaña).",
+    )
+    parser.add_argument(
+        "--year",
+        type=int,
+        default=CAMPAIGN_YEAR,
+        help="Campaña meteorológica; por defecto, el año calendario de Argentina.",
     )
     parser.add_argument(
         "--siga-file",
@@ -1047,7 +1099,14 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    output = Path(args.output)
+    configurar_campania(args.year)
+    if hoy_argentina() < CAMPANIA_START:
+        print(
+            f"❌ La campaña {args.year} aún no comenzó; no se genera meteorología futura.",
+            file=sys.stderr,
+        )
+        return 1
+    output = Path(args.output) if args.output else ARCHIVO_MAESTRO_DEFAULT
     siga_file = Path(args.siga_file) if args.siga_file else None
     try:
         if args.solo_validar_siga:
